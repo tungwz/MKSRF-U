@@ -10,7 +10,6 @@ PROGRAM clmu2grid
    REAL(r8), PARAMETER :: udelta = 1._r8/120._r8
    REAL    , PARAMETER :: fv     = -999
 
-   INTEGER, PARAMETER :: plat = 600 , plon = 600
    INTEGER, PARAMETER :: ulat = 600 , ulon = 600
    INTEGER, PARAMETER :: nlat = 1200, nlon = 1200
    INTEGER, PARAMETER :: rid = 33   , den_clss = 3
@@ -21,8 +20,6 @@ PROGRAM clmu2grid
    INTEGER, PARAMETER :: npft= 16 
    
 ! input variables
-   REAL(r8), ALLOCATABLE, DIMENSION(:)   :: tlat
-   REAL(r8), ALLOCATABLE, DIMENSION(:)   :: tlon
    REAL(r8), ALLOCATABLE, DIMENSION(:)   :: hlat
    REAL(r8), ALLOCATABLE, DIMENSION(:)   :: hlats
    REAL(r8), ALLOCATABLE, DIMENSION(:)   :: hlatn
@@ -30,7 +27,6 @@ PROGRAM clmu2grid
    REAL(r8), ALLOCATABLE, DIMENSION(:)   :: hlonw
    REAL(r8), ALLOCATABLE, DIMENSION(:)   :: hlone
    REAL(r8), ALLOCATABLE, DIMENSION(:)   :: urlat
-   REAL(r8), ALLOCATABLE, DIMENSION(:)   :: nrlat
    REAL(r8), ALLOCATABLE, DIMENSION(:)   :: urlats
    REAL(r8), ALLOCATABLE, DIMENSION(:)   :: urlatn
    REAL(r8), ALLOCATABLE, DIMENSION(:)   :: urlon
@@ -40,24 +36,15 @@ PROGRAM clmu2grid
    REAL(r8), ALLOCATABLE, DIMENSION(:,:) :: gedi_th, ngedi_th
    REAL(r8), ALLOCATABLE, DIMENSION(:,:) :: modur, nmodur
    REAL(r8), ALLOCATABLE, DIMENSION(:,:) :: gl30_wt
-   REAL(r8), ALLOCATABLE, DIMENSION(:,:) :: mask
    REAL(r8), ALLOCATABLE, DIMENSION(:,:) :: harea
    REAL(r8), ALLOCATABLE, DIMENSION(:,:) :: uarea
    REAL(r8), ALLOCATABLE, DIMENSION(:,:) :: larea
 
-   INTEGER , ALLOCATABLE, DIMENSION(:,:) :: urclss
    INTEGER , ALLOCATABLE, DIMENSION(:,:) :: urrgid
    INTEGER , ALLOCATABLE, DIMENSION(:,:) :: urden
 
-   REAL(r8), ALLOCATABLE, DIMENSION(:,:) :: umd
-   REAL(r8), ALLOCATABLE, DIMENSION(:,:) :: uhd
-   REAL(r8), ALLOCATABLE, DIMENSION(:,:) :: utbd
-   REAL(r8), ALLOCATABLE, DIMENSION(:,:) :: umask
-
    REAL(r8), ALLOCATABLE, DIMENSION(:,:)     :: npct_urban
    REAL(r8), ALLOCATABLE, DIMENSION(:,:)     :: pct_urban
-   REAL(r8), ALLOCATABLE, DIMENSION(:,:,:)   :: ugt
-   REAL(r8), ALLOCATABLE, DIMENSION(:,:,:)   :: uvg
    REAL(r8), ALLOCATABLE, DIMENSION(:,:,:)   :: pct_pft
    REAL(r8), ALLOCATABLE, DIMENSION(:,:,:)   :: npct_pft
    REAL(r8), ALLOCATABLE, DIMENSION(:,:,:)   :: htop_pft
@@ -67,25 +54,22 @@ PROGRAM clmu2grid
    REAL(r8), ALLOCATABLE, DIMENSION(:,:,:,:) :: sai_pft
    REAL(r8), ALLOCATABLE, DIMENSION(:,:,:,:) :: nsai_pft
 
-   REAL(r8), DIMENSION(3,rid)      :: hwrcan, wtrf, wtrd, emrf, emwl
-   REAL(r8), DIMENSION(3,rid)      :: emimrd, emperd, htrf, whc, ulevimrd 
-   REAL(r8), DIMENSION(3,rid)      :: thrf, thwl, tbmin, tbmax
+   REAL(r8), DIMENSION(den_clss,rid)      :: hwrcan, wtrf, wtrd, emrf, emwl
+   REAL(r8), DIMENSION(den_clss,rid)      :: emimrd, emperd, htrf, whc, ulevimrd 
+   REAL(r8), DIMENSION(den_clss,rid)      :: thrf, thwl, tbmin, tbmax
    
-   REAL(r8), DIMENSION(3,rid,10)   :: cvrf, cvwl, cvimrd, &
-                                             tkrf, tkwl, tkimrd
-   REAL(r8), DIMENSION(3,rid,nr,ns):: albrf, albwl, albimrd, albperd
+   REAL(r8), DIMENSION(den_clss,rid,ulev )   :: cvrf, cvwl, cvimrd, &
+                                                tkrf, tkwl, tkimrd
+   REAL(r8), DIMENSION(den_clss,rid,nr,ns):: albrf, albwl, albimrd, albperd
    ! output variables
    INTEGER , ALLOCATABLE, DIMENSION(:,:) :: ur_clss
    INTEGER , ALLOCATABLE, DIMENSION(:,:) :: ur_rgid
    
    REAL(r8), ALLOCATABLE, DIMENSION(:)     :: latso, flatso
    REAL(r8), ALLOCATABLE, DIMENSION(:)     :: lonso
-   REAL(r8), ALLOCATABLE, DIMENSION(:,:,:) :: wgt_top
-   REAL(r8), ALLOCATABLE, DIMENSION(:,:,:) :: cnt
    REAL(r8), ALLOCATABLE, DIMENSION(:,:)   :: area
    REAL(r8), ALLOCATABLE, DIMENSION(:,:)   :: lurrgid
-   REAL(r8), ALLOCATABLE, DIMENSION(:,:)   :: nmd
-   REAL(r8), ALLOCATABLE, DIMENSION(:,:)   :: ntbd
+   REAL(r8), ALLOCATABLE, DIMENSION(:,:,:) :: wgt_top
    REAL(r8), ALLOCATABLE, DIMENSION(:,:,:) :: tc
    REAL(r8), ALLOCATABLE, DIMENSION(:,:,:) :: urwt
    REAL(r8), ALLOCATABLE, DIMENSION(:,:,:) :: htop
@@ -107,15 +91,9 @@ PROGRAM clmu2grid
    REAL(r8), ALLOCATABLE, DIMENSION(:,:,:) :: tb_min, ftb_min
    REAL(r8), ALLOCATABLE, DIMENSION(:,:,:) :: tb_max, ftb_max
 
-   REAL(r8), ALLOCATABLE, DIMENSION(:,:)   :: pct_tland
-   REAL(r8), ALLOCATABLE, DIMENSION(:,:)   :: pct_wland
-   REAL(r8), ALLOCATABLE, DIMENSION(:,:)   :: pct_hland
-   REAL(r8), ALLOCATABLE, DIMENSION(:,:)   :: ur_land
-   REAL(r8), ALLOCATABLE, DIMENSION(:,:)   :: hgt, avg
-   
+   REAL(r8), ALLOCATABLE, DIMENSION(:,:)     :: hgt, avg
    REAL(r8), ALLOCATABLE, DIMENSION(:,:,:)   :: ur_dc
    REAL(r8), ALLOCATABLE, DIMENSION(:,:,:)   :: pct_ur, fpct_ur
-  ! REAL(r8), ALLOCATABLE, DIMENSION(:,:,:) :: lai_wgt
    REAL(r8), ALLOCATABLE, DIMENSION(:,:,:,:) :: ur_lai, fur_lai
    REAL(r8), ALLOCATABLE, DIMENSION(:,:,:,:) :: ur_sai, fur_sai
    REAL(r8), ALLOCATABLE, DIMENSION(:,:,:,:) :: cv_rf, fcv_rf
@@ -132,7 +110,8 @@ PROGRAM clmu2grid
 
    ! variable ids
    INTEGER :: ncid, uhd_vid, umd_vid, utbd_vid, htop_urvid, reg
-   INTEGER :: lat_vid, lon_vid, lat_dimid, lon_dimid, ns_dimid, nr_dimid, ulev_dimid
+   INTEGER :: lat_vid, lon_vid, lat_dimid, lon_dimid, &
+              ns_dimid, nr_dimid, ulev_dimid
    INTEGER :: ns_vid, nr_vid, pct_tcvid, pct_urvid, pct_urwtvid, ulev_vid, lev_vid
    INTEGER :: pftvid, laivid, maskid, umaskid, t_pftvid, ur_laivid, htop_pftvid
    INTEGER :: hlat_vid, hlon_vid, gfcc_tcvid, gedi_thvid, gl30_wtvid
@@ -147,20 +126,18 @@ PROGRAM clmu2grid
 
    CHARACTER(len=255) :: SRF_DIR='/hard/dongwz/github/CLMUgrid/v4/srf_5x5/'
    CHARACTER(len=255) :: RAW_DIR='/hard/yuanhua/mksrf/srf_5x5/'
-   CHARACTER(len=255) :: REGFILE='5x5_F90'
+   CHARACTER(len=255) :: OUT_DIR='/hard/dongwz/urban_data/'
+   CHARACTER(len=255) :: REGFILE='reg_5x5'
    CHARACTER(len=255) :: filename
    CHARACTER(len=4)    , DIMENSION(4) :: creg
 
    REAL(r8) :: fac(3)
    REAL(r8) :: pi, deg2rad, re, dx, dy, sumarea, sumur, sumpct
    REAL(r8) :: dll, x_delta, y_delta, wgt
-   !REAL(r8) :: lone1(nxy1), lonw1(nxy1), latn1(nxy1), lats1(nxy1)
-   REAL(r8) :: lone2(nxo), lonw2(nxo), latn2(nyo), lats2(nyo)
-   REAL(r8) :: lone3(nxo), lonw3(nxo), latn3(nyo), lats3(nyo)
+   REAL(r8) :: lone1(nxo), lonw1(nxo), latn1(nyo), lats1(nyo)
 
    INTEGER  :: i, j, k, io, jo, m, n, ii, jj, ir, jr, cont, sumth, p
 
-   !REAL(r8) :: wgt(3)
    INTEGER  :: n_ns(2), n_nr(2), n_den(3), n_ulev(10), n_mon(12)
    INTEGER  :: XY2D(2), XY3D(3), XY4D(4), UR3D(3), UL3D(4), XY5D(5)
 
@@ -168,148 +145,118 @@ PROGRAM clmu2grid
    deg2rad = pi/180._r8
    re = 6.37122e6 * 0.001
 
-   allocate( tlat  (nlat) )
-   allocate( tlon  (nlon) )
-   allocate( hlat  (nlat) )
-   allocate( hlats (nlat) )
-   allocate( hlatn (nlat) )
-   allocate( hlon  (nlon) )
-   allocate( hlonw (nlon) )
-   allocate( hlone (nlon) )
-   allocate( urlat (plat) )
-   allocate( nrlat (plat) )
-   allocate( urlats(plat) )
-   allocate( urlatn(plat) )
-   allocate( urlon (plon) )
-   allocate( urlonw(plon) )
-   allocate( urlone(plon) )
+   ALLOCATE( hlat  (nlat) )
+   ALLOCATE( hlats (nlat) )
+   ALLOCATE( hlatn (nlat) )
+   ALLOCATE( hlon  (nlon) )
+   ALLOCATE( hlonw (nlon) )
+   ALLOCATE( hlone (nlon) )
+   ALLOCATE( urlat (ulat) )
+   ALLOCATE( urlats(ulat) )
+   ALLOCATE( urlatn(ulat) )
+   ALLOCATE( urlon (ulon) )
+   ALLOCATE( urlonw(ulon) )
+   ALLOCATE( urlone(ulon) )
 
-   allocate( harea   (nlon, nlat) )
-   allocate( mask    (nlon, nlat) )
-   allocate( gfcc_tc (nlon, nlat) )
-   allocate( gedi_th (nlon, nlat) )
-   allocate( ngedi_th(nlon, nlat) )
-   allocate( gl30_wt (nlon, nlat) )
-   allocate( modur   (nlon, nlat) )
-   allocate( nmodur  (nlon, nlat) )
+   ALLOCATE( harea   (nlon, nlat) )
+   ALLOCATE( gfcc_tc (nlon, nlat) )
+   ALLOCATE( gedi_th (nlon, nlat) )
+   ALLOCATE( ngedi_th(nlon, nlat) )
+   ALLOCATE( gl30_wt (nlon, nlat) )
+   ALLOCATE( modur   (nlon, nlat) )
+   ALLOCATE( nmodur  (nlon, nlat) )
+   ALLOCATE( uarea   (ulon, ulat) )
+   ALLOCATE( urrgid  (ulon, ulat) )
+   ALLOCATE( urden   (ulon, ulat) )
 
-   allocate( uarea  (plon, plat) )
-   allocate( umask  (plon, plat) )
-   allocate( umd    (ulon, ulat) )
-   allocate( nmd    (nlon, nlat) )
-   allocate( uhd    (ulon, ulat) )
-   allocate( lurrgid(nxo , nyo ) )
-   allocate( utbd   (ulon, ulat) )
-   allocate( ntbd   (ulon, ulat) )
-   allocate( urclss (plon, plat) )
-   allocate( urrgid (plon, plat) )
-   allocate( urden  (plon, plat) )
+   ALLOCATE( latso     (nyo) )
+   ALLOCATE( lonso     (nxo) )
+   ALLOCATE( lurrgid   (nxo, nyo) )
+   ALLOCATE( ur_clss   (nxo, nyo) )
+   ALLOCATE( ur_rgid   (nxo, nyo) )
+   ALLOCATE( area      (nxo, nyo) )
+   ALLOCATE( hgt       (nxo, nyo) )
+   ALLOCATE( avg       (nxo, nyo) )
+   ALLOCATE( pct_urban (nxo, nyo) )
+   ALLOCATE( npct_urban(nxo, nyo) )
 
-   allocate( latso     (nyo) )
-   allocate( lonso     (nxo) )
+   ALLOCATE( htop_pft  (nxo, nyo, npft     ) )
+   ALLOCATE( nhtop_pft (nxo, nyo, npft     ) )
+   ALLOCATE( pct_pft   (nxo, nyo, npft     ) )
+   ALLOCATE( npct_pft  (nxo, nyo, npft     ) )
+   ALLOCATE( lai_pft   (nxo, nyo, npft, mon) )
+   ALLOCATE( nlai_pft  (nxo, nyo, npft, mon) )
+   ALLOCATE( sai_pft   (nxo, nyo, npft, mon) )
+   ALLOCATE( nsai_pft  (nxo, nyo, npft, mon) )
+   ALLOCATE( ur_dc     (nxo, nyo, den_clss ) )
+   ALLOCATE( pct_ur    (nxo, nyo, den_clss ) )
 
-   allocate( area      (nxo, nyo) )
-   allocate( hgt       (nxo, nyo) )
-   allocate( avg       (nxo, nyo) )
-   allocate( pct_urban (nxo, nyo) )
-   allocate( npct_urban(nxo, nyo) )
+   ALLOCATE( wgt_top  (nxo, nyo, den_clss) )
+   ALLOCATE( tc       (nxo, nyo, den_clss) )
+   ALLOCATE( urwt     (nxo, nyo, den_clss) )
+   ALLOCATE( htop     (nxo, nyo, den_clss) )
+   ALLOCATE( pct_tc   (nxo, nyo, den_clss) )
+   ALLOCATE( pct_urwt (nxo, nyo, den_clss) )
+   ALLOCATE( htop_ur  (nxo, nyo, den_clss) )
+   ALLOCATE( hwr_can  (nxo, nyo, den_clss) )
+   ALLOCATE( wt_rf    (nxo, nyo, den_clss) )
+   ALLOCATE( wt_rd    (nxo, nyo, den_clss) )
+   ALLOCATE( em_rf    (nxo, nyo, den_clss) )
+   ALLOCATE( em_wl    (nxo, nyo, den_clss) )
+   ALLOCATE( em_imrd  (nxo, nyo, den_clss) )
+   ALLOCATE( em_perd  (nxo, nyo, den_clss) )
+   ALLOCATE( ht_rf    (nxo, nyo, den_clss) )
+   ALLOCATE( w_hc     (nxo, nyo, den_clss) )
+   ALLOCATE( ulev_imrd(nxo, nyo, den_clss) )
+   ALLOCATE( th_rf    (nxo, nyo, den_clss) )
+   ALLOCATE( th_wl    (nxo, nyo, den_clss) )
+   ALLOCATE( tb_min   (nxo, nyo, den_clss) )
+   ALLOCATE( tb_max   (nxo, nyo, den_clss) )
+   ALLOCATE( ur_sai   (nxo, nyo, den_clss, mon ) )
+   ALLOCATE( ur_lai   (nxo, nyo, den_clss, mon ) )
+   ALLOCATE( cv_rf    (nxo, nyo, den_clss, ulev) )
+   ALLOCATE( cv_wl    (nxo, nyo, den_clss, ulev) )
+   ALLOCATE( cv_imrd  (nxo, nyo, den_clss, ulev) )
+   ALLOCATE( tk_rf    (nxo, nyo, den_clss, ulev) )
+   ALLOCATE( tk_wl    (nxo, nyo, den_clss, ulev) )
+   ALLOCATE( tk_imrd  (nxo, nyo, den_clss, ulev) )
+   ALLOCATE( alb_rf   (nxo, nyo, den_clss, nr, ns) )
+   ALLOCATE( alb_wl   (nxo, nyo, den_clss, nr, ns) )
+   ALLOCATE( alb_imrd (nxo, nyo, den_clss, nr, ns) )
+   ALLOCATE( alb_perd (nxo, nyo, den_clss, nr, ns) )
 
-   allocate( htop_pft  (nxo, nyo, npft     ) )
-   allocate( nhtop_pft (nxo, nyo, npft     ) )
-   allocate( pct_pft   (nxo, nyo, npft     ) )
-   allocate( npct_pft  (nxo, nyo, npft     ) )
-   allocate( lai_pft   (nxo, nyo, npft, mon) )
-   allocate( nlai_pft  (nxo, nyo, npft, mon) )
-   allocate( sai_pft   (nxo, nyo, npft, mon) )
-   allocate( nsai_pft  (nxo, nyo, npft, mon) )
-   allocate( ur_dc     (nxo, nyo, den_clss ) )
-   allocate( pct_ur    (nxo, nyo, den_clss ) )
-
-   allocate( pct_tland(nxo, nyo) )
-   allocate( pct_wland(nxo, nyo) )
-   allocate( pct_hland(nxo, nyo) )
-   allocate( ur_land  (nxo, nyo) )
-   allocate( ur_clss  (nxo, nyo) )
-   allocate( ur_rgid  (nxo, nyo) )
-
-   allocate( ugt      (nxo, nyo, 3) )
-   allocate( uvg      (nxo, nyo, 3) )
-   allocate( wgt_top  (nxo, nyo, 3) )
-   allocate( cnt      (nxo, nyo, 3) )
-
-   allocate( tc       (nxo, nyo, den_clss) )
-   allocate( urwt     (nxo, nyo, den_clss) )
-   allocate( htop     (nxo, nyo, den_clss) )
-   allocate( pct_tc   (nxo, nyo, den_clss) )
-   allocate( pct_urwt (nxo, nyo, den_clss) )
-   allocate( htop_ur  (nxo, nyo, den_clss) )
-   allocate( hwr_can  (nxo, nyo, den_clss) )
-   allocate( wt_rf    (nxo, nyo, den_clss) )
-   allocate( wt_rd    (nxo, nyo, den_clss) )
-   allocate( em_rf    (nxo, nyo, den_clss) )
-   allocate( em_wl    (nxo, nyo, den_clss) )
-   allocate( em_imrd  (nxo, nyo, den_clss) )
-   allocate( em_perd  (nxo, nyo, den_clss) )
-   allocate( ht_rf    (nxo, nyo, den_clss) )
-   allocate( w_hc     (nxo, nyo, den_clss) )
-   allocate( ulev_imrd(nxo, nyo, den_clss) )
-   allocate( th_rf    (nxo, nyo, den_clss) )
-   allocate( th_wl    (nxo, nyo, den_clss) )
-   allocate( tb_min   (nxo, nyo, den_clss) )
-   allocate( tb_max   (nxo, nyo, den_clss) )
-   allocate( ur_sai   (nxo, nyo, den_clss, mon ) )
-   allocate( ur_lai   (nxo, nyo, den_clss, mon ) )
-   allocate( cv_rf    (nxo, nyo, den_clss, ulev) )
-   allocate( cv_wl    (nxo, nyo, den_clss, ulev) )
-   allocate( cv_imrd  (nxo, nyo, den_clss, ulev) )
-   allocate( tk_rf    (nxo, nyo, den_clss, ulev) )
-   allocate( tk_wl    (nxo, nyo, den_clss, ulev) )
-   allocate( tk_imrd  (nxo, nyo, den_clss, ulev) )
-   allocate( alb_rf   (nxo, nyo, den_clss, nr, ns) )
-   allocate( alb_wl   (nxo, nyo, den_clss, nr, ns) )
-   allocate( alb_imrd (nxo, nyo, den_clss, nr, ns) )
-   allocate( alb_perd (nxo, nyo, den_clss, nr, ns) )
-
-   allocate( flatso    (nyo) )
-   allocate( fpct_tc   (nxo, nyo, den_clss) )
-   allocate( fpct_urwt (nxo, nyo, den_clss) )
-   allocate( fhtop_ur  (nxo, nyo, den_clss) )
-   allocate( fpct_ur   (nxo, nyo, den_clss) )
-   allocate( fhwr_can  (nxo, nyo, den_clss) )
-   allocate( fwt_rf    (nxo, nyo, den_clss) )
-   allocate( fwt_rd    (nxo, nyo, den_clss) )
-   allocate( fem_rf    (nxo, nyo, den_clss) )
-   allocate( fem_wl    (nxo, nyo, den_clss) )
-   allocate( fem_imrd  (nxo, nyo, den_clss) )
-   allocate( fem_perd  (nxo, nyo, den_clss) )
-   allocate( fht_rf    (nxo, nyo, den_clss) )
-   allocate( fth_rf    (nxo, nyo, den_clss) )
-   allocate( fth_wl    (nxo, nyo, den_clss) )
-   allocate( ftb_min   (nxo, nyo, den_clss) )
-   allocate( ftb_max   (nxo, nyo, den_clss) )
-   allocate( fur_sai   (nxo, nyo, den_clss, mon ) )
-   allocate( fur_lai   (nxo, nyo, den_clss, mon ) )
-   allocate( fcv_rf    (nxo, nyo, den_clss, ulev) )
-   allocate( fcv_wl    (nxo, nyo, den_clss, ulev) )
-   allocate( fcv_imrd  (nxo, nyo, den_clss, ulev) )
-   allocate( ftk_rf    (nxo, nyo, den_clss, ulev) )
-   allocate( ftk_wl    (nxo, nyo, den_clss, ulev) )
-   allocate( ftk_imrd  (nxo, nyo, den_clss, ulev) )
-   allocate( falb_rf   (nxo, nyo, den_clss, nr, ns) )
-   allocate( falb_wl   (nxo, nyo, den_clss, nr, ns) )
-   allocate( falb_imrd (nxo, nyo, den_clss, nr, ns) )
-   allocate( falb_perd (nxo, nyo, den_clss, nr, ns) )
+   ALLOCATE( flatso    (nyo) )
+   ALLOCATE( fpct_tc   (nxo, nyo, den_clss) )
+   ALLOCATE( fpct_urwt (nxo, nyo, den_clss) )
+   ALLOCATE( fhtop_ur  (nxo, nyo, den_clss) )
+   ALLOCATE( fpct_ur   (nxo, nyo, den_clss) )
+   ALLOCATE( fhwr_can  (nxo, nyo, den_clss) )
+   ALLOCATE( fwt_rf    (nxo, nyo, den_clss) )
+   ALLOCATE( fwt_rd    (nxo, nyo, den_clss) )
+   ALLOCATE( fem_rf    (nxo, nyo, den_clss) )
+   ALLOCATE( fem_wl    (nxo, nyo, den_clss) )
+   ALLOCATE( fem_imrd  (nxo, nyo, den_clss) )
+   ALLOCATE( fem_perd  (nxo, nyo, den_clss) )
+   ALLOCATE( fht_rf    (nxo, nyo, den_clss) )
+   ALLOCATE( fth_rf    (nxo, nyo, den_clss) )
+   ALLOCATE( fth_wl    (nxo, nyo, den_clss) )
+   ALLOCATE( ftb_min   (nxo, nyo, den_clss) )
+   ALLOCATE( ftb_max   (nxo, nyo, den_clss) )
+   ALLOCATE( fur_sai   (nxo, nyo, den_clss, mon ) )
+   ALLOCATE( fur_lai   (nxo, nyo, den_clss, mon ) )
+   ALLOCATE( fcv_rf    (nxo, nyo, den_clss, ulev) )
+   ALLOCATE( fcv_wl    (nxo, nyo, den_clss, ulev) )
+   ALLOCATE( fcv_imrd  (nxo, nyo, den_clss, ulev) )
+   ALLOCATE( ftk_rf    (nxo, nyo, den_clss, ulev) )
+   ALLOCATE( ftk_wl    (nxo, nyo, den_clss, ulev) )
+   ALLOCATE( ftk_imrd  (nxo, nyo, den_clss, ulev) )
+   ALLOCATE( falb_rf   (nxo, nyo, den_clss, nr, ns) )
+   ALLOCATE( falb_wl   (nxo, nyo, den_clss, nr, ns) )
+   ALLOCATE( falb_imrd (nxo, nyo, den_clss, nr, ns) )
+   ALLOCATE( falb_perd (nxo, nyo, den_clss, nr, ns) )
 
    ! initialization
    fac      (:)     = 0.
-   cnt      (:,:,:) = 0.
-   ur_land  (:,:)   = 0.
-   pct_tland(:,:)   = 0.
-   pct_wland(:,:)   = 0.
-   pct_hland(:,:)   = 0.
-   utbd     (:,:)   = 0.
-   uhd      (:,:)   = 0.
-   umd      (:,:)   = 0.
    hgt      (:,:)   = 0.
    avg      (:,:)   = 0.
    tc       (:,:,:) = 0.
@@ -320,8 +267,6 @@ PROGRAM clmu2grid
    htop_ur  (:,:,:) = 0.
    ur_dc    (:,:,:) = 0.
 
-   ugt      (:,:,:) = 0.
-   uvg      (:,:,:) = 0.
    hwr_can  (:,:,:) = 0.
    wt_rf    (:,:,:) = 0.
    wt_rd    (:,:,:) = 0.
@@ -482,18 +427,16 @@ PROGRAM clmu2grid
 
    CALL check( nf90_close(ncid) )
 
-   print *, "    reading MODIS PFTs data"
+   PRINT *, "    reading MODIS PFTs data"
 
    CALL check( nf90_open("global_0.5x0.5.MOD2005_V4.5.nc", nf90_nowrite, ncid) )
 
    CALL check( nf90_inq_varid(ncid, "PCT_PFT"        , pftvid     ) )
    CALL check( nf90_inq_varid(ncid, "MONTHLY_PFT_LAI", laivid     ) )
    CALL check( nf90_inq_varid(ncid, "MONTHLY_PFT_SAI", saivid     ) )
-   ! CALL check( nf90_inq_varid(ncid, "PCT_URBAN"      , upftvid    ) )
    CALL check( nf90_inq_varid(ncid, "HTOP_PFT"       , htop_pftvid) )
 
    CALL check( nf90_get_var(ncid, pftvid     , npct_pft  ) )
-   ! CALL check( nf90_get_var(ncid, upftvid    , npct_urban) )
    CALL check( nf90_get_var(ncid, saivid     , nsai_pft  ) )
    CALL check( nf90_get_var(ncid, laivid     , nlai_pft  ) )
    CALL check( nf90_get_var(ncid, htop_pftvid, nhtop_pft ) )
@@ -514,13 +457,13 @@ PROGRAM clmu2grid
    ENDDO
 
    DO i = 1, nyo
-      lats2(i) = -90. + (i-1)*y_delta
-      latn2(i) = -90. + i*y_delta
+      lats1(i) = -90. + (i-1)*y_delta
+      latn1(i) = -90. + i*y_delta
    ENDDO
 
    DO i = 1, nxo
-      lonw2(i) = -180. + (i-1)*x_delta
-      lone2(i) = -180. + i*x_delta
+      lonw1(i) = -180. + (i-1)*x_delta
+      lone1(i) = -180. + i*x_delta
    ENDDO
 
    DO i = 1, nxo
@@ -532,8 +475,8 @@ PROGRAM clmu2grid
    ENDDO
 
    DO i = 1, nyo
-      dx = (lone2(1)-lonw2(1))*deg2rad
-      dy = sin(latn2(i)*deg2rad) - sin(lats2(i)*deg2rad)
+      dx = (lone1(1)-lonw1(1))*deg2rad
+      dy = sin(latn1(i)*deg2rad) - sin(lats1(i)*deg2rad)
       area(:,i) = dx*dy*re*re
    ENDDO
 
@@ -542,14 +485,14 @@ PROGRAM clmu2grid
    
    DO WHILE(.TRUE.)
      ! process global 500m raw data
-     print *, "*** processing 500m raw data ***"
-     print *, "    reading data"
+     PRINT *, "*** processing 500m raw data ***"
+     PRINT *, "    reading data"
      READ(11,*,END=100) reg
      READ(12,*,END=101) creg
      filename = TRIM(SRF_DIR)//'RG_'//TRIM(creg(1))//'_'//&
                 TRIM(creg(2))//'_'//TRIM(creg(3))//'_'//TRIM(creg(4))//'.SRF.nc'
 
-     print*, filename
+     PRINT*, filename
      CALL check( nf90_open(TRIM(filename), nf90_nowrite, ncid) )
 
      CALL check( nf90_inq_varid(ncid, "lat"        , hlat_vid  ) )
@@ -566,41 +509,29 @@ PROGRAM clmu2grid
 
      CALL check( nf90_close(ncid) )
 
-     ! filename = TRIM(ROOT_DIR)//TRIM(RAW_DIR)//'RG_'//TRIM(creg(1))//'_'//&
-     !            TRIM(creg(2))//'_'//TRIM(creg(3))//'_'//TRIM(creg(4))//'.RAW2005.nc'
-     ! CALL check( nf90_open(filename, nf90_nowrite, ncid) )
+     PRINT *, "    reading 1km urban class data"
 
-     ! CALL check( nf90_inq_varid(ncid, "tree_height", gedi_thvid) )
-     ! CALL check( nf90_get_var  (ncid, gedi_thvid   , gedi_th   ) )
-
-     ! CALL check( nf90_close(ncid) )
-
-     print *, "    reading 1km urban class data"
-
-     !print *, "    reading 1km urban properties data"
+     !PRINT *, "    reading 1km urban properties data"
      filename = TRIM(SRF_DIR)//'RG_'//TRIM(creg(1))//'_'//&
                 TRIM(creg(2))//'_'//TRIM(creg(3))//'_'//TRIM(creg(4))//'.NCAR.nc'
      CALL check( nf90_open(filename, nf90_nowrite, ncid) )
 
      CALL check( nf90_inq_varid(ncid, "lat"                , urlat_vid ) )
      CALL check( nf90_inq_varid(ncid, "lon"                , urlon_vid ) )
-    !CALL check( nf90_inq_varid(ncid, "LANDMASK"           , umaskid     ) )
      CALL check( nf90_inq_varid(ncid, "URBAN_DENSITY_CLASS", ur_clssvid) )
      CALL check( nf90_inq_varid(ncid, "REGION_ID"          , ur_rgvid  ) )
-     !CALL check( nf90_inq_varid(ncid, "URBAN_DENSITY"      , ur_denvid   ) 
 
      CALL check( nf90_get_var(ncid, urlat_vid   , urlat ) )
      CALL check( nf90_get_var(ncid, urlon_vid   , urlon ) )
-     !CALL check( nf90_get_var(ncid, umaskid     , umask   ) )
      CALL check( nf90_get_var(ncid, ur_clssvid  , urden ) )
      CALL check( nf90_get_var(ncid, ur_rgvid    , urrgid) )
 
      CALL check( nf90_close(ncid) )
 
-     print*, "    reading MOD URBAN data"
+     PRINT*, "    reading MOD URBAN data"
      filename = TRIM(RAW_DIR)//'RG_'//TRIM(creg(1))//'_'//&
                 TRIM(creg(2))//'_'//TRIM(creg(3))//'_'//TRIM(creg(4))//'.MOD2005.nc'
-     print*, filename
+     PRINT*, filename
 
      CALL check( nf90_open(filename, nf90_nowrite, ncid      ) )
      CALL check( nf90_inq_varid(ncid, "PCT_URBAN", upftvid   ) )
@@ -618,8 +549,6 @@ PROGRAM clmu2grid
      ENDDO
 
      ! calculate output lat/lon
-     
-
      ! calculate the edge of small grids
      DO i = 1, nlat
         hlats(i) = hlat(1) - sdelta/2. + (i-1)*sdelta
@@ -637,26 +566,24 @@ PROGRAM clmu2grid
         harea(:,i) = dx*dy*re*re
      ENDDO
 
-      DO i = 1, plat
+      DO i = 1, ulat
          urlatn(i) = urlat(1) - udelta/2. + i*udelta
          urlats(i) = urlat(1) - udelta/2. + (i-1)*udelta
-         ! urlat(i)  = -90. + i*udelta - 0.5*udelta
       ENDDO
 
-      DO i = 1, plon
+      DO i = 1, ulon
          urlonw(i) = urlon(1) - udelta/2. + (i-1)*udelta
          urlone(i) = urlon(1) - udelta/2. + i*udelta
-         ! urlon(i)  = -180. + i*udelta - 0.5*udelta
       ENDDO
 
-      DO i = 1, plat
+      DO i = 1, ulat
          dx = (urlone(1)-urlonw(1))*deg2rad
          dy = sin(urlatn(i)*deg2rad) - sin(urlats(i)*deg2rad)
          uarea(:,i) = dx*dy*re*re
       ENDDO
 
-      print *, "    aggregating data"
-      print *, "    aggregating urban class data"
+      PRINT *, "    aggregating data"
+      PRINT *, "    aggregating urban class data"
       DO i = 1, 1200
          DO j = 1, 1200
             ! calculate io, jo
@@ -740,8 +667,8 @@ PROGRAM clmu2grid
          ENDDO
       ENDDO
 
-      print *, "*** processing CLM 1km urban data ***"
-      print *, "    assigning building properites for model grid"
+      PRINT *, "*** processing CLM 1km urban data ***"
+      PRINT *, "    assigning building properites for model grid"
       DO i = 1, 600
          DO j = 1, 600
             ! calculate io, jo
@@ -766,13 +693,11 @@ PROGRAM clmu2grid
                em_wl    (jo,io,1) = em_wl    (jo,io,1) + emwl    (1,uxid)*uarea(j,i)
                em_imrd  (jo,io,1) = em_imrd  (jo,io,1) + emimrd  (1,uxid)*uarea(j,i)
                em_perd  (jo,io,1) = em_perd  (jo,io,1) + emperd  (1,uxid)*uarea(j,i)
-               !ulev_imrd(jo,io,1) = ulevimrd(1,uxid)
                th_rf    (jo,io,1) = th_rf    (jo,io,1) + thrf    (1,uxid)*uarea(j,i)
                th_wl    (jo,io,1) = th_wl    (jo,io,1) + thwl    (1,uxid)*uarea(j,i)
                tb_min   (jo,io,1) = tb_min   (jo,io,1) + tbmin   (1,uxid)*uarea(j,i)
                tb_max   (jo,io,1) = tb_max   (jo,io,1) + tbmax   (1,uxid)*uarea(j,i)
                ht_rf    (jo,io,1) = ht_rf    (jo,io,1) + htrf    (1,uxid)*uarea(j,i)
-               !w_hc     (jo,io,1) = whc     (1,uxid)
 
                alb_rf  (jo,io,1,:,:) = alb_rf  (jo,io,1,:,:) + albrf  (1,uxid,:,:)*uarea(j,i)
                alb_wl  (jo,io,1,:,:) = alb_wl  (jo,io,1,:,:) + albwl  (1,uxid,:,:)*uarea(j,i)
@@ -804,13 +729,11 @@ PROGRAM clmu2grid
                em_wl    (jo,io,2) = em_wl    (jo,io,2) + emwl    (2,uxid)*uarea(j,i)
                em_imrd  (jo,io,2) = em_imrd  (jo,io,2) + emimrd  (2,uxid)*uarea(j,i)
                em_perd  (jo,io,2) = em_perd  (jo,io,2) + emperd  (2,uxid)*uarea(j,i)
-               !ulev_imrd(jo,io,1) = ulevimrd(1,uxid)
                th_rf    (jo,io,2) = th_rf    (jo,io,2) + thrf    (2,uxid)*uarea(j,i)
                th_wl    (jo,io,2) = th_wl    (jo,io,2) + thwl    (2,uxid)*uarea(j,i)
                tb_min   (jo,io,2) = tb_min   (jo,io,2) + tbmin   (2,uxid)*uarea(j,i)
                tb_max   (jo,io,2) = tb_max   (jo,io,2) + tbmax   (2,uxid)*uarea(j,i)
                ht_rf    (jo,io,2) = ht_rf    (jo,io,2) + htrf    (2,uxid)*uarea(j,i)
-               !w_hc     (jo,io,1) = whc     (1,uxid)
 
                alb_rf  (jo,io,2,:,:) = alb_rf  (jo,io,2,:,:) + albrf  (2,uxid,:,:)*uarea(j,i)
                alb_wl  (jo,io,2,:,:) = alb_wl  (jo,io,2,:,:) + albwl  (2,uxid,:,:)*uarea(j,i)
@@ -841,13 +764,11 @@ PROGRAM clmu2grid
                em_wl    (jo,io,3) = em_wl    (jo,io,3) + emwl    (3,uxid)*uarea(j,i)
                em_imrd  (jo,io,3) = em_imrd  (jo,io,3) + emimrd  (3,uxid)*uarea(j,i)
                em_perd  (jo,io,3) = em_perd  (jo,io,3) + emperd  (3,uxid)*uarea(j,i)
-               !ulev_imrd(jo,io,1) = ulevimrd(1,uxid)
                th_rf    (jo,io,3) = th_rf    (jo,io,3) + thrf    (3,uxid)*uarea(j,i)
                th_wl    (jo,io,3) = th_wl    (jo,io,3) + thwl    (3,uxid)*uarea(j,i)
                tb_min   (jo,io,3) = tb_min   (jo,io,3) + tbmin   (3,uxid)*uarea(j,i)
                tb_max   (jo,io,3) = tb_max   (jo,io,3) + tbmax   (3,uxid)*uarea(j,i)
                ht_rf    (jo,io,3) = ht_rf    (jo,io,3) + htrf    (3,uxid)*uarea(j,i)
-               !w_hc     (jo,io,1) = whc     (1,uxid)
 
                alb_rf  (jo,io,3,:,:) = alb_rf  (jo,io,3,:,:) + albrf  (3,uxid,:,:)*uarea(j,i)
                alb_wl  (jo,io,3,:,:) = alb_wl  (jo,io,3,:,:) + albwl  (3,uxid,:,:)*uarea(j,i)
@@ -879,9 +800,9 @@ PROGRAM clmu2grid
             jo = NINT((hlon(j)+180.)/x_delta+0.5)
 
             ! IF (io>360 .or. jo>720)THEN
-            !    print*, i,j
-            !    print*, io,jo
-            !    print*, hlonw(j)
+            !    PRINT*, i,j
+            !    PRINT*, io,jo
+            !    PRINT*, hlonw(j)
             ! ENDIF
 
             IF (urden(jr,ir)<=0 .and. modur(j,i)>0) THEN
@@ -890,8 +811,8 @@ PROGRAM clmu2grid
                IF (uxid == 0) THEN
                   uxid = lurrgid(jo,io)
                   IF (uxid == 0) THEN
-                     print*, io, jo, modur(j,i)  
-                     print*,i,j     
+                     PRINT*, io, jo, modur(j,i)  
+                     PRINT*,i,j     
                      IF (io == 81 .and. jo == 498) THEN
                         uxid = 30
                      ENDIF
@@ -954,7 +875,6 @@ PROGRAM clmu2grid
 
    DO i = 1, nyo
       DO j = 1, nxo
-
          DO k = 1, 3
                IF (ur_dc(j,i,k) > 0) THEN
                   ! calculate urban tree cover
@@ -996,7 +916,6 @@ PROGRAM clmu2grid
                   ENDDO
                   cv_rf  (j,i,k,:) = cv_rf  (j,i,k,:) / ur_dc(j,i,k)
                   cv_wl  (j,i,k,:) = cv_wl  (j,i,k,:) / ur_dc(j,i,k)
-
                ENDIF
          ENDDO
 
@@ -1014,16 +933,13 @@ PROGRAM clmu2grid
 
          ! 检查3类城市是否超过100%
          IF (sum(pct_ur(j,i,1:3)) > 1e-6 .and. abs(sum(pct_ur(j,i,1:3))-100) > 1e-3) THEN
-            print *, 'urban_pct > 100'
-            print *, pct_ur(j,i,1:3)
+            PRINT *, 'urban_pct > 100'
+            PRINT *, pct_ur(j,i,1:3)
          ENDIF
-
       ENDDO
-   ENDDO
+   ENDDO   
    
-   
-   print *, "********************************"
-   
+   PRINT *, "********************************"   
    DO i = 1, nyo 
       DO j = 1, nxo
          ! calculate urban lai
@@ -1057,19 +973,18 @@ PROGRAM clmu2grid
 
          DO m = 2, 9
             IF (htop_pft(j,i,m) > 0) THEN
-               fac(1) = htop_ur(j,i,1) / htop_pft(j,i,m)!htop_ur(j,i,1)!htop_pft(j,i,m)
-               fac(2) = htop_ur(j,i,2) / htop_pft(j,i,m)!htop_ur(j,i,1)!htop_pft(j,i,m)
-               fac(3) = htop_ur(j,i,3) / htop_pft(j,i,m)!htop_ur(j,i,1)!htop_pft(j,i,m)
+               fac(1) = htop_ur(j,i,1) / htop_pft(j,i,m)
+               fac(2) = htop_ur(j,i,2) / htop_pft(j,i,m)
+               fac(3) = htop_ur(j,i,3) / htop_pft(j,i,m)
 
-               wgt = pct_pft(j,i,m)/sum(pct_pft(j,i,2:9))
-               
+               wgt = pct_pft(j,i,m)/sum(pct_pft(j,i,2:9))               
                DO k = 1, 12       
-                  ur_lai (j,i,1,k) = ur_lai(j,i,1,k)+wgt*lai_pft(j,i,m,k)*min(1.5,fac(1))!/100!*min(fac,1.)/100.
-                  ur_lai (j,i,2,k) = ur_lai(j,i,2,k)+wgt*lai_pft(j,i,m,k)*min(1.5,fac(2))!/100
-                  ur_lai (j,i,3,k) = ur_lai(j,i,3,k)+wgt*lai_pft(j,i,m,k)*min(1.5,fac(3))!/100
-                  ur_sai (j,i,1,k) = ur_sai(j,i,1,k)+wgt*sai_pft(j,i,m,k)*min(1.5,fac(1))!/100!*min(fac,1.)/100.
-                  ur_sai (j,i,2,k) = ur_sai(j,i,2,k)+wgt*sai_pft(j,i,m,k)*min(1.5,fac(2))!/100
-                  ur_sai (j,i,3,k) = ur_sai(j,i,3,k)+wgt*sai_pft(j,i,m,k)*min(1.5,fac(3))!/100 
+                  ur_lai (j,i,1,k) = ur_lai(j,i,1,k)+wgt*lai_pft(j,i,m,k)*min(1.5,fac(1))
+                  ur_lai (j,i,2,k) = ur_lai(j,i,2,k)+wgt*lai_pft(j,i,m,k)*min(1.5,fac(2))
+                  ur_lai (j,i,3,k) = ur_lai(j,i,3,k)+wgt*lai_pft(j,i,m,k)*min(1.5,fac(3))
+                  ur_sai (j,i,1,k) = ur_sai(j,i,1,k)+wgt*sai_pft(j,i,m,k)*min(1.5,fac(1))
+                  ur_sai (j,i,2,k) = ur_sai(j,i,2,k)+wgt*sai_pft(j,i,m,k)*min(1.5,fac(2))
+                  ur_sai (j,i,3,k) = ur_sai(j,i,3,k)+wgt*sai_pft(j,i,m,k)*min(1.5,fac(3))!
                ENDDO
             ENDIF
          ENDDO
@@ -1113,7 +1028,7 @@ PROGRAM clmu2grid
       ENDDO
    ENDDO
 
-   print *, "*****************************************"
+   PRINT *, "*****************************************"
 
    DO i = 1, 2
       n_nr(i) = i
@@ -1135,7 +1050,8 @@ PROGRAM clmu2grid
       n_mon(i) = i
    ENDDO
 
-   CALL check( nf90_create("scolm_urban_data_modis.nc", NF90_NETCDF4, ncid) )
+   
+   CALL check( nf90_create(TRIM(OUT_DIR)//"scolm_urban_data_modis222.nc", NF90_NETCDF4, ncid) )
 
    CALL check( nf90_def_dim(ncid, "lat"     , nyo     , lat_dimid ) )
    CALL check( nf90_def_dim(ncid, "lon"     , nxo     , lon_dimid ) )
@@ -1173,7 +1089,6 @@ PROGRAM clmu2grid
    CALL check( nf90_def_var(ncid, "URBAN_TREE_PCT" , NF90_FLOAT, XY3D, pct_tcvid  ) )
    CALL check( nf90_def_var(ncid, "URBAN_WATER_PCT", NF90_FLOAT, XY3D, pct_urwtvid) )
    CALL check( nf90_def_var(ncid, "URBAN_TREE_TOP" , NF90_FLOAT, XY3D, htop_urvid ) )
-   !CALL check( nf90_def_var(ncid, "REGION_ID"      , NF90_INT  , XY2D, ur_rgvid   ) )
    CALL check( nf90_def_var(ncid, "CANYON_HWR"     , NF90_FLOAT, XY3D, hwr_canvid ) )
    CALL check( nf90_def_var(ncid, "WTLUNIT_ROOF"   , NF90_FLOAT, XY3D, wt_rfvid   ) )
    CALL check( nf90_def_var(ncid, "WTROAD_PERV"    , NF90_FLOAT, XY3D, wt_rdvid   ) )
@@ -1182,8 +1097,6 @@ PROGRAM clmu2grid
    CALL check( nf90_def_var(ncid, "EM_IMPROAD"     , NF90_FLOAT, XY3D, em_imrdvid ) )
    CALL check( nf90_def_var(ncid, "EM_PERROAD"     , NF90_FLOAT, XY3D, em_perdvid ) )
    CALL check( nf90_def_var(ncid, "HT_ROOF"        , NF90_FLOAT, XY3D, ht_rfvid   ) )
-   !CALL check( nf90_def_var(ncid, "WIND_HGT_CANYON", NF90_FLOAT, XY3D, whcvid     ) )
-   !CALL check( nf90_def_var(ncid, "NLEV_IMPROAD"   , NF90_FLOAT, XY3D, ulev_vid   ) )
    CALL check( nf90_def_var(ncid, "THICK_ROOF"     , NF90_FLOAT, XY3D, th_rfvid   ) )
    CALL check( nf90_def_var(ncid, "THICK_WALL"     , NF90_FLOAT, XY3D, th_wlvid   ) )
    CALL check( nf90_def_var(ncid, "T_BUILDING_MIN" , NF90_FLOAT, XY3D, tbminvid   ) )
@@ -1212,9 +1125,6 @@ PROGRAM clmu2grid
    CALL check( nf90_put_att(ncid, pct_urvid , "units"     , "%"                                           ) )
    CALL check( nf90_put_att(ncid, pct_urvid , "long_name" , "Percentage of each urban type (density)"     ) )
    CALL check( nf90_put_att(ncid, pct_urvid , "_FillValue", fv                   ) )
-
-   !CALL check( nf90_put_att(ncid, ur_rgvid  , "units"     , "unitless"           ) )
-   !CALL check( nf90_put_att(ncid, ur_rgvid  , "long_name" , "Region ID"          ) )
 
    CALL check( nf90_put_att(ncid, pct_tcvid, "units"     , "%"                                           ) )
    CALL check( nf90_put_att(ncid, pct_tcvid, "long_name" , "Urban percent tree cover"                    ) )
@@ -1268,14 +1178,6 @@ PROGRAM clmu2grid
    CALL check( nf90_put_att(ncid, ht_rfvid  , "long_name" , "height of roof"                             ) )
    CALL check( nf90_put_att(ncid, ht_rfvid  , "_FillValue", fv) )
  
-   !CALL check( nf90_put_att(ncid, whcvid    , "units"     , "meters"                                     ) )
-   !CALL check( nf90_put_att(ncid, whcvid    , "long_name" , "height of wind in canyon"                   ) )
-   !CALL check( nf90_put_att(ncid, whcvid    , "_FillValue", fv) )
-
-   !CALL check( nf90_put_att(ncid, ulev_vid  , "units"     , "unitless"                                   ) )
-   !CALL check( nf90_put_att(ncid, ulev_vid  , "long_name" , "number of impervious road layers"           ) )
-   !CALL check( nf90_put_att(ncid, ulev_vid  , "_FillValue", fv) )
-
    CALL check( nf90_put_att(ncid, th_rfvid  , "units"     , "m"                                          ) )
    CALL check( nf90_put_att(ncid, th_rfvid  , "long_name" , "thickness of roof"                          ) )
    CALL check( nf90_put_att(ncid, th_rfvid  , "_FillValue", fv) )
@@ -1370,9 +1272,6 @@ PROGRAM clmu2grid
    CALL check( nf90_inq_varid(ncid, "URBAN_TREE_SAI", ur_saivid     ) )
    CALL check( nf90_put_var  (ncid, ur_saivid  , fur_sai        ) )
 
-   !CALL check( nf90_inq_varid(ncid, "REGION_ID", ur_rgvid      ) )
-   !CALL check( nf90_put_var  (ncid,ur_rgvid, ur_rgid           ) )
-
    CALL check( nf90_inq_varid(ncid, "CANYON_HWR", hwr_canvid   ) )
    CALL check( nf90_put_var  (ncid,hwr_canvid,fhwr_can          ) )
 
@@ -1411,9 +1310,6 @@ PROGRAM clmu2grid
 
    CALL check( nf90_inq_varid(ncid, "T_BUILDING_MAX",tbmaxvid  ) )
    CALL check( nf90_put_var(ncid,tbmaxvid,ftb_max               ) )
-
-   !CALL check( nf90_inq_varid(ncid, "NLEV_IMPROAD",ulev_imrdvid) )
-   !CALL check( nf90_put_var(ncid,ulev_imrdvid,ulev_imrd        ) )
 
    CALL check( nf90_inq_varid(ncid, "URBAN_PCT", pct_urvid     ) )
    CALL check( nf90_put_var(ncid,pct_urvid,fpct_ur              ) )
@@ -1465,89 +1361,104 @@ PROGRAM clmu2grid
    !CALL check( nf90_inq_varid(ncid, "hgt", p) )
    !CALL checK( nf90_put_var(ncid, p, hgt) )
    !CALL check( nf90_close(ncid) )
-   print*, "*** SUCCESS write surface file ***"
+   PRINT*, "*** SUCCESS write surface file ***"
    
-   deallocate( tlat   )
-   deallocate( tlon   )
-   deallocate( hlat   )
-   deallocate( hlats  )
-   deallocate( hlatn  )
-   deallocate( hlon   )
-   deallocate( hlonw  )
-   deallocate( hlone  )
-   deallocate( urlat  )
-   deallocate( nrlat  )
-   deallocate( urlats )
-   deallocate( urlatn )
-   deallocate( urlon  )
-   deallocate( urlonw )
-   deallocate( urlone )
-   deallocate( harea  )
-   deallocate( mask   )
-   deallocate( gfcc_tc)
-   deallocate( gedi_th)
-   deallocate( gl30_wt)
 
-   deallocate( uarea  )
-   deallocate( umask  )
-   deallocate( umd    )
-   deallocate( nmd    )
-   deallocate( uhd    )
-   deallocate( lurrgid    )
-   deallocate( utbd   )
-   deallocate( ntbd   )
-   deallocate( urclss )
-   deallocate( urrgid )
+   DEALLOCATE( hlat    )
+   DEALLOCATE( hlats   )
+   DEALLOCATE( hlatn   )
+   DEALLOCATE( hlon    )
+   DEALLOCATE( hlonw   )
+   DEALLOCATE( hlone   )
+   DEALLOCATE( urlat   )
+   DEALLOCATE( urlats  )
+   DEALLOCATE( urlatn  )
+   DEALLOCATE( urlon   )
+   DEALLOCATE( urlonw  )
+   DEALLOCATE( urlone  )
+   DEALLOCATE( harea   )
+   DEALLOCATE( gfcc_tc )
+   DEALLOCATE( gedi_th )
+   DEALLOCATE( gl30_wt )
 
-   deallocate( latso     )
-   deallocate( lonso     )
-   deallocate( area      )
-   deallocate( pct_urban )
-   deallocate( npct_urban)
-   deallocate( htop_pft  )
-   deallocate( nhtop_pft )
-   deallocate( pct_pft   )
-   deallocate( npct_pft  )
-   deallocate( lai_pft   )
-   deallocate( nlai_pft  )
-   deallocate( ur_dc     )
-   deallocate( pct_ur    )
+   DEALLOCATE( uarea   )
+   DEALLOCATE( lurrgid )
+   DEALLOCATE( urrgid  )
 
-   deallocate( cnt       )
-   deallocate( pct_tc    )
-   deallocate( pct_tland )
-   deallocate( pct_wland )
-   deallocate( pct_hland )
-   deallocate( pct_urwt  )
-   deallocate( htop_ur   )
-   deallocate( ur_land   )
-   deallocate( ur_clss   )
-   deallocate( ur_rgid   )
-   deallocate( ur_lai    )
-   deallocate( hwr_can   )
-   deallocate( wt_rf     )
-   deallocate( wt_rd     )
-   deallocate( em_rf     )
-   deallocate( em_wl     )
-   deallocate( em_imrd   )
-   deallocate( em_perd   )
-   deallocate( ht_rf     )
-   deallocate( w_hc      )
-   deallocate( ulev_imrd )
-   deallocate( th_rf     )
-   deallocate( th_wl     )
-   deallocate( tb_min    )
-   deallocate( tb_max    )
-   deallocate( cv_rf     )
-   deallocate( cv_wl     )
-   deallocate( cv_imrd   )
-   deallocate( tk_rf     )
-   deallocate( tk_wl     )
-   deallocate( tk_imrd   )
-   deallocate( alb_rf    )
-   deallocate( alb_wl    )
-   deallocate( alb_imrd  )
-   deallocate( alb_perd  )
+   DEALLOCATE( latso      )
+   DEALLOCATE( lonso      )
+   DEALLOCATE( area       )
+   DEALLOCATE( pct_urban  )
+   DEALLOCATE( npct_urban )
+   DEALLOCATE( htop_pft   )
+   DEALLOCATE( nhtop_pft  )
+   DEALLOCATE( pct_pft    )
+   DEALLOCATE( npct_pft   )
+   DEALLOCATE( lai_pft    )
+   DEALLOCATE( nlai_pft   )
+   DEALLOCATE( ur_dc      )
+   DEALLOCATE( pct_ur     )
+
+   DEALLOCATE( pct_tc    )
+   DEALLOCATE( pct_urwt  )
+   DEALLOCATE( htop_ur   )
+   DEALLOCATE( ur_clss   )
+   DEALLOCATE( ur_rgid   )
+   DEALLOCATE( ur_lai    )
+   DEALLOCATE( hwr_can   )
+   DEALLOCATE( wt_rf     )
+   DEALLOCATE( wt_rd     )
+   DEALLOCATE( em_rf     )
+   DEALLOCATE( em_wl     )
+   DEALLOCATE( em_imrd   )
+   DEALLOCATE( em_perd   )
+   DEALLOCATE( ht_rf     )
+   DEALLOCATE( w_hc      )
+   DEALLOCATE( ulev_imrd )
+   DEALLOCATE( th_rf     )
+   DEALLOCATE( th_wl     )
+   DEALLOCATE( tb_min    )
+   DEALLOCATE( tb_max    )
+   DEALLOCATE( cv_rf     )
+   DEALLOCATE( cv_wl     )
+   DEALLOCATE( cv_imrd   )
+   DEALLOCATE( tk_rf     )
+   DEALLOCATE( tk_wl     )
+   DEALLOCATE( tk_imrd   )
+   DEALLOCATE( alb_rf    )
+   DEALLOCATE( alb_wl    )
+   DEALLOCATE( alb_imrd  )
+   DEALLOCATE( alb_perd  )
+
+   DEALLOCATE( flatso    )
+   DEALLOCATE( fpct_tc   )
+   DEALLOCATE( fpct_urwt )
+   DEALLOCATE( fhtop_ur  )
+   DEALLOCATE( fpct_ur   )
+   DEALLOCATE( fhwr_can  )
+   DEALLOCATE( fwt_rf    )
+   DEALLOCATE( fwt_rd    )
+   DEALLOCATE( fem_rf    )
+   DEALLOCATE( fem_wl    )
+   DEALLOCATE( fem_imrd  )
+   DEALLOCATE( fem_perd  )
+   DEALLOCATE( fht_rf    )
+   DEALLOCATE( fth_rf    )
+   DEALLOCATE( fth_wl    )
+   DEALLOCATE( ftb_min   )
+   DEALLOCATE( ftb_max   )
+   DEALLOCATE( fur_sai   )
+   DEALLOCATE( fur_lai   )
+   DEALLOCATE( fcv_rf    )
+   DEALLOCATE( fcv_wl    )
+   DEALLOCATE( fcv_imrd  )
+   DEALLOCATE( ftk_rf    )
+   DEALLOCATE( ftk_wl    )
+   DEALLOCATE( ftk_imrd  )
+   DEALLOCATE( falb_rf   )
+   DEALLOCATE( falb_wl   )
+   DEALLOCATE( falb_imrd )
+   DEALLOCATE( falb_perd )
 
 CONTAINS 
    
@@ -1555,7 +1466,7 @@ CONTAINS
       INTEGER, intent(in) :: status
 
       IF (status /= nf90_noerr) THEN
-         print *, trim( nf90_strerror(status))
+         PRINT *, trim( nf90_strerror(status))
          stop 2
       ENDIF 
    END SUBROUTINE check
