@@ -808,12 +808,14 @@ PROGRAM clmu2grid
             IF (urden(jr,ir)<=0 .and. modur(j,i)>0) THEN
                ur_dc(jo,io,3) = ur_dc(jo,io,3) + harea(j,i)*modur(j,i)/100
                uxid           = urrgid(jr,ir)
+               
+               ! 部分格点MODIS与NCAR不一致(NCAR没有城市ID)，因此通过距离MODIS格点最近的NCAR城市ID赋值
                IF (uxid == 0) THEN
                   uxid = lurrgid(jo,io)
                   IF (uxid == 0) THEN
                      PRINT*, io, jo, modur(j,i)  
                      PRINT*,i,j     
-                     IF (io == 81 .and. jo == 498) THEN
+                     IF (io == 81  .and. jo == 498) THEN
                         uxid = 30
                      ENDIF
                      IF (io == 176 .and. jo == 198) THEN
@@ -833,6 +835,11 @@ PROGRAM clmu2grid
                      ENDIF
                   ENDIF
                ENDIF
+
+               ! 城市建筑属性聚合
+               ! 加权：
+               ! 粗网格城市属性=粗网格城市属性+细网格城市属性*细网格面积*MODIS_PCT_URBAN
+               ! 加权系数：细网格面积(ur_dc)
                hwr_can  (jo,io,3) = hwr_can  (jo,io,3) + hwrcan  (3,uxid)*harea(j,i)*modur(j,i)/100
                wt_rf    (jo,io,3) = wt_rf    (jo,io,3) + wtrf    (3,uxid)*harea(j,i)*modur(j,i)/100
                wt_rd    (jo,io,3) = wt_rd    (jo,io,3) + wtrd    (3,uxid)*harea(j,i)*modur(j,i)/100
@@ -840,13 +847,11 @@ PROGRAM clmu2grid
                em_wl    (jo,io,3) = em_wl    (jo,io,3) + emwl    (3,uxid)*harea(j,i)*modur(j,i)/100
                em_imrd  (jo,io,3) = em_imrd  (jo,io,3) + emimrd  (3,uxid)*harea(j,i)*modur(j,i)/100
                em_perd  (jo,io,3) = em_perd  (jo,io,3) + emperd  (3,uxid)*harea(j,i)*modur(j,i)/100
-               !ulev_imrd(jo,io,1) = ulevimrd(1,uxid)
                th_rf    (jo,io,3) = th_rf    (jo,io,3) + thrf    (3,uxid)*harea(j,i)*modur(j,i)/100
                th_wl    (jo,io,3) = th_wl    (jo,io,3) + thwl    (3,uxid)*harea(j,i)*modur(j,i)/100
                tb_min   (jo,io,3) = tb_min   (jo,io,3) + tbmin   (3,uxid)*harea(j,i)*modur(j,i)/100
                tb_max   (jo,io,3) = tb_max   (jo,io,3) + tbmax   (3,uxid)*harea(j,i)*modur(j,i)/100
                ht_rf    (jo,io,3) = ht_rf    (jo,io,3) + htrf    (3,uxid)*harea(j,i)*modur(j,i)/100
-               !w_hc     (jo,io,1) = whc     (1,uxid)
 
                alb_rf  (jo,io,3,:,:) = alb_rf  (jo,io,3,:,:) + albrf  (3,uxid,:,:)*harea(j,i)*modur(j,i)/100
                alb_wl  (jo,io,3,:,:) = alb_wl  (jo,io,3,:,:) + albwl  (3,uxid,:,:)*harea(j,i)*modur(j,i)/100
@@ -997,32 +1002,35 @@ PROGRAM clmu2grid
          k = nyo - i + 1
          
          flatso (i)     = latso(k)
-         fpct_ur(j,i,:) = pct_ur(j,k,:)
-         fpct_tc(j,i,:) = pct_tc(j,k,:)
-         fpct_urwt(j,i,:)   = pct_urwt(j,k,:)
-         fhtop_ur (j,i,:)   = htop_ur(j,k,:)
-         fur_lai  (j,i,:,:) = ur_lai(j,k,:,:)
-         fur_sai  (j,i,:,:) = ur_sai(j,k,:,:)
-         fhwr_can (j,i,:) = hwr_can(j,k,:)
-         fwt_rf   (j,i,:) = wt_rf(j,k,:)
-         fwt_rd   (j,i,:) = wt_rd(j,k,:)
-         fem_rf   (j,i,:) = em_rf(j,k,:)
-         fem_wl   (j,i,:) = em_wl(j,k,:)
-         fem_imrd (j,i,:) = em_imrd(j,k,:)
-         fem_perd (j,i,:) = em_perd(j,k,:)
-         fht_rf   (j,i,:) = ht_rf(j,k,:)
-         fth_rf   (j,i,:) = th_rf(j,k,:)
-         fth_wl   (j,i,:) = th_wl(j,k,:)
-         ftb_min  (j,i,:) = tb_min(j,k,:)
-         ftb_max  (j,i,:) = tb_max(j,k,:)
-         ftk_rf   (j,i,:,:) = tk_rf(j,k,:,:) 
-         ftk_wl   (j,i,:,:) = tk_wl(j,k,:,:)
+
+         fpct_ur  (j,i,:) = pct_ur  (j,k,:)
+         fpct_tc  (j,i,:) = pct_tc  (j,k,:)
+         fpct_urwt(j,i,:) = pct_urwt(j,k,:)
+         fhtop_ur (j,i,:) = htop_ur (j,k,:)
+         fhwr_can (j,i,:) = hwr_can (j,k,:)
+         fwt_rf   (j,i,:) = wt_rf   (j,k,:)
+         fwt_rd   (j,i,:) = wt_rd   (j,k,:)
+         fem_rf   (j,i,:) = em_rf   (j,k,:)
+         fem_wl   (j,i,:) = em_wl   (j,k,:)
+         fem_imrd (j,i,:) = em_imrd (j,k,:)
+         fem_perd (j,i,:) = em_perd (j,k,:)
+         fht_rf   (j,i,:) = ht_rf   (j,k,:)
+         fth_rf   (j,i,:) = th_rf   (j,k,:)
+         fth_wl   (j,i,:) = th_wl   (j,k,:)
+         ftb_min  (j,i,:) = tb_min  (j,k,:)
+         ftb_max  (j,i,:) = tb_max  (j,k,:)
+
+         fur_lai  (j,i,:,:) = ur_lai (j,k,:,:)
+         fur_sai  (j,i,:,:) = ur_sai (j,k,:,:)
+         ftk_rf   (j,i,:,:) = tk_rf  (j,k,:,:) 
+         ftk_wl   (j,i,:,:) = tk_wl  (j,k,:,:)
          ftk_imrd (j,i,:,:) = tk_imrd(j,k,:,:)
-         fcv_rf   (j,i,:,:) = cv_rf(j,k,:,:)
-         fcv_wl   (j,i,:,:) = cv_wl(j,k,:,:)
+         fcv_rf   (j,i,:,:) = cv_rf  (j,k,:,:)
+         fcv_wl   (j,i,:,:) = cv_wl  (j,k,:,:)
          fcv_imrd (j,i,:,:) = cv_imrd(j,k,:,:)
-         falb_rf  (j,i,:,:,:) = alb_rf(j,k,:,:,:)
-         falb_wl  (j,i,:,:,:) = alb_wl(j,k,:,:,:)
+
+         falb_rf  (j,i,:,:,:) = alb_rf  (j,k,:,:,:)
+         falb_wl  (j,i,:,:,:) = alb_wl  (j,k,:,:,:)
          falb_imrd(j,i,:,:,:) = alb_imrd(j,k,:,:,:)
          falb_perd(j,i,:,:,:) = alb_perd(j,k,:,:,:)
       ENDDO
