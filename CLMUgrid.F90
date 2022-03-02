@@ -1,23 +1,23 @@
 PROGRAM clmu2grid
 
-   use netcdf
+   USE netcdf
 
    IMPLICIT NONE
 
-   INTEGER, PARAMETER :: r8 = SELECTED_REAL_KIND(12)
+   INTEGER , PARAMETER :: r8 = SELECTED_REAL_KIND(12)
 
    REAL(r8), PARAMETER :: sdelta = 1._r8/240._r8
    REAL(r8), PARAMETER :: udelta = 1._r8/120._r8
    REAL    , PARAMETER :: fv     = -999
 
-   INTEGER, PARAMETER :: ulat = 600 , ulon = 600
-   INTEGER, PARAMETER :: nlat = 1200, nlon = 1200
-   INTEGER, PARAMETER :: rid = 33   , den_clss = 3
-   INTEGER, PARAMETER :: nxo = 720  , nyo = 360
-   INTEGER, PARAMETER :: ns  = 2    , nr  = 2
-   INTEGER, PARAMETER :: ulev= 10
-   INTEGER, PARAMETER :: mon = 12
-   INTEGER, PARAMETER :: npft= 16 
+   INTEGER , PARAMETER :: ulat = 600 , ulon = 600
+   INTEGER , PARAMETER :: nlat = 1200, nlon = 1200
+   INTEGER , PARAMETER :: rid  = 33  , den_clss = 3
+   INTEGER , PARAMETER :: nxo  = 720 , nyo = 360
+   INTEGER , PARAMETER :: ns   = 2   , nr  = 2
+   INTEGER , PARAMETER :: ulev = 10
+   INTEGER , PARAMETER :: mon  = 12
+   INTEGER , PARAMETER :: npft = 16 
    
 ! input variables
    REAL(r8), ALLOCATABLE, DIMENSION(:)   :: hlat
@@ -58,12 +58,12 @@ PROGRAM clmu2grid
    REAL(r8), DIMENSION(den_clss,rid)      :: emimrd, emperd, htrf, whc, ulevimrd 
    REAL(r8), DIMENSION(den_clss,rid)      :: thrf, thwl, tbmin, tbmax
    
-   REAL(r8), DIMENSION(den_clss,rid,ulev )   :: cvrf, cvwl, cvimrd, &
+   REAL(r8), DIMENSION(den_clss,rid,ulev ):: cvrf, cvwl, cvimrd, &
                                                 tkrf, tkwl, tkimrd
    REAL(r8), DIMENSION(den_clss,rid,nr,ns):: albrf, albwl, albimrd, albperd
    ! output variables
-   INTEGER , ALLOCATABLE, DIMENSION(:,:) :: ur_clss
-   INTEGER , ALLOCATABLE, DIMENSION(:,:) :: ur_rgid
+   INTEGER , ALLOCATABLE, DIMENSION(:,:)   :: ur_clss
+   INTEGER , ALLOCATABLE, DIMENSION(:,:)   :: ur_rgid
    
    REAL(r8), ALLOCATABLE, DIMENSION(:)     :: latso, flatso
    REAL(r8), ALLOCATABLE, DIMENSION(:)     :: lonso
@@ -130,6 +130,7 @@ PROGRAM clmu2grid
    CHARACTER(len=255) :: REGFILE='reg_5x5'
    CHARACTER(len=255) :: filename
    CHARACTER(len=4)    , DIMENSION(4) :: creg
+   CHARACTER          :: year="2005"
 
    REAL(r8) :: fac(3)
    REAL(r8) :: pi, deg2rad, re, dx, dy, sumarea, sumur, sumpct
@@ -137,9 +138,14 @@ PROGRAM clmu2grid
    REAL(r8) :: lone1(nxo), lonw1(nxo), latn1(nyo), lats1(nyo)
 
    INTEGER  :: i, j, k, io, jo, m, n, ii, jj, ir, jr, cont, sumth, p
-
+   INTEGER  :: argn
    INTEGER  :: n_ns(2), n_nr(2), n_den(3), n_ulev(10), n_mon(12)
    INTEGER  :: XY2D(2), XY3D(3), XY4D(4), UR3D(3), UL3D(4), XY5D(5)
+
+   argn = IARGC()
+   IF (argn > 0) THEN
+      CALL getarg(1, year)
+   ENDIF
 
    pi = 4._r8*atan(1.)
    deg2rad = pi/180._r8
@@ -179,7 +185,6 @@ PROGRAM clmu2grid
    ALLOCATE( avg       (nxo, nyo) )
    ALLOCATE( pct_urban (nxo, nyo) )
    ALLOCATE( npct_urban(nxo, nyo) )
-
    ALLOCATE( htop_pft  (nxo, nyo, npft     ) )
    ALLOCATE( nhtop_pft (nxo, nyo, npft     ) )
    ALLOCATE( pct_pft   (nxo, nyo, npft     ) )
@@ -190,40 +195,39 @@ PROGRAM clmu2grid
    ALLOCATE( nsai_pft  (nxo, nyo, npft, mon) )
    ALLOCATE( ur_dc     (nxo, nyo, den_clss ) )
    ALLOCATE( pct_ur    (nxo, nyo, den_clss ) )
-
-   ALLOCATE( wgt_top  (nxo, nyo, den_clss) )
-   ALLOCATE( tc       (nxo, nyo, den_clss) )
-   ALLOCATE( urwt     (nxo, nyo, den_clss) )
-   ALLOCATE( htop     (nxo, nyo, den_clss) )
-   ALLOCATE( pct_tc   (nxo, nyo, den_clss) )
-   ALLOCATE( pct_urwt (nxo, nyo, den_clss) )
-   ALLOCATE( htop_ur  (nxo, nyo, den_clss) )
-   ALLOCATE( hwr_can  (nxo, nyo, den_clss) )
-   ALLOCATE( wt_rf    (nxo, nyo, den_clss) )
-   ALLOCATE( wt_rd    (nxo, nyo, den_clss) )
-   ALLOCATE( em_rf    (nxo, nyo, den_clss) )
-   ALLOCATE( em_wl    (nxo, nyo, den_clss) )
-   ALLOCATE( em_imrd  (nxo, nyo, den_clss) )
-   ALLOCATE( em_perd  (nxo, nyo, den_clss) )
-   ALLOCATE( ht_rf    (nxo, nyo, den_clss) )
-   ALLOCATE( w_hc     (nxo, nyo, den_clss) )
-   ALLOCATE( ulev_imrd(nxo, nyo, den_clss) )
-   ALLOCATE( th_rf    (nxo, nyo, den_clss) )
-   ALLOCATE( th_wl    (nxo, nyo, den_clss) )
-   ALLOCATE( tb_min   (nxo, nyo, den_clss) )
-   ALLOCATE( tb_max   (nxo, nyo, den_clss) )
-   ALLOCATE( ur_sai   (nxo, nyo, den_clss, mon ) )
-   ALLOCATE( ur_lai   (nxo, nyo, den_clss, mon ) )
-   ALLOCATE( cv_rf    (nxo, nyo, den_clss, ulev) )
-   ALLOCATE( cv_wl    (nxo, nyo, den_clss, ulev) )
-   ALLOCATE( cv_imrd  (nxo, nyo, den_clss, ulev) )
-   ALLOCATE( tk_rf    (nxo, nyo, den_clss, ulev) )
-   ALLOCATE( tk_wl    (nxo, nyo, den_clss, ulev) )
-   ALLOCATE( tk_imrd  (nxo, nyo, den_clss, ulev) )
-   ALLOCATE( alb_rf   (nxo, nyo, den_clss, nr, ns) )
-   ALLOCATE( alb_wl   (nxo, nyo, den_clss, nr, ns) )
-   ALLOCATE( alb_imrd (nxo, nyo, den_clss, nr, ns) )
-   ALLOCATE( alb_perd (nxo, nyo, den_clss, nr, ns) )
+   ALLOCATE( wgt_top   (nxo, nyo, den_clss ) )
+   ALLOCATE( tc        (nxo, nyo, den_clss ) )
+   ALLOCATE( urwt      (nxo, nyo, den_clss ) )
+   ALLOCATE( htop      (nxo, nyo, den_clss ) )
+   ALLOCATE( pct_tc    (nxo, nyo, den_clss ) )
+   ALLOCATE( pct_urwt  (nxo, nyo, den_clss ) )
+   ALLOCATE( htop_ur   (nxo, nyo, den_clss ) )
+   ALLOCATE( hwr_can   (nxo, nyo, den_clss ) )
+   ALLOCATE( wt_rf     (nxo, nyo, den_clss ) )
+   ALLOCATE( wt_rd     (nxo, nyo, den_clss ) )
+   ALLOCATE( em_rf     (nxo, nyo, den_clss ) )
+   ALLOCATE( em_wl     (nxo, nyo, den_clss ) )
+   ALLOCATE( em_imrd   (nxo, nyo, den_clss ) )
+   ALLOCATE( em_perd   (nxo, nyo, den_clss ) )
+   ALLOCATE( ht_rf     (nxo, nyo, den_clss ) )
+   ALLOCATE( w_hc      (nxo, nyo, den_clss ) )
+   ALLOCATE( ulev_imrd (nxo, nyo, den_clss ) )
+   ALLOCATE( th_rf     (nxo, nyo, den_clss ) )
+   ALLOCATE( th_wl     (nxo, nyo, den_clss ) )
+   ALLOCATE( tb_min    (nxo, nyo, den_clss ) )
+   ALLOCATE( tb_max    (nxo, nyo, den_clss ) )
+   ALLOCATE( ur_sai    (nxo, nyo, den_clss, mon ) )
+   ALLOCATE( ur_lai    (nxo, nyo, den_clss, mon ) )
+   ALLOCATE( cv_rf     (nxo, nyo, den_clss, ulev) )
+   ALLOCATE( cv_wl     (nxo, nyo, den_clss, ulev) )
+   ALLOCATE( cv_imrd   (nxo, nyo, den_clss, ulev) )
+   ALLOCATE( tk_rf     (nxo, nyo, den_clss, ulev) )
+   ALLOCATE( tk_wl     (nxo, nyo, den_clss, ulev) )
+   ALLOCATE( tk_imrd   (nxo, nyo, den_clss, ulev) )
+   ALLOCATE( alb_rf    (nxo, nyo, den_clss, nr, ns) )
+   ALLOCATE( alb_wl    (nxo, nyo, den_clss, nr, ns) )
+   ALLOCATE( alb_imrd  (nxo, nyo, den_clss, nr, ns) )
+   ALLOCATE( alb_perd  (nxo, nyo, den_clss, nr, ns) )
 
    ALLOCATE( flatso    (nyo) )
    ALLOCATE( fpct_tc   (nxo, nyo, den_clss) )
@@ -331,9 +335,8 @@ PROGRAM clmu2grid
    fpct_urwt (:,:,:) = 0.
    fhtop_ur  (:,:,:) = 0.
 
-   ur_rgid(:,:) = 0.
-   ur_clss(:,:) = 0.
-   
+   ur_rgid (:,:) = 0.
+   ur_clss (:,:) = 0.  
    hwrcan  (:,:) = 0.
    wtrf    (:,:) = 0.
    wtrd    (:,:) = 0.
@@ -366,6 +369,8 @@ PROGRAM clmu2grid
    x_delta = (360._r8/nxo)*1._r8
    y_delta = (180._r8/nyo)*1._r8
 
+
+   ! get urban properties data from NCAR 1km urban data
    CALL check( nf90_open('urban_properties_data.1km.210726-121520.nc', nf90_nowrite, ncid) )
 
    CALL check( nf90_inq_varid(ncid, "CANYON_HWR"         , hwr_canvid  ) )
@@ -420,6 +425,7 @@ PROGRAM clmu2grid
 
    CALL check( nf90_close(ncid) )
 
+   ! 仅仅用于一些特殊格点的城市ID赋值
    CALL check( nf90_open("urban_properties_data.5deg.211121-164510.nc", nf90_nowrite, ncid) )
 
    CALL check( nf90_inq_varid(ncid, "REGION_ID", ur_rgvid) )
@@ -429,7 +435,8 @@ PROGRAM clmu2grid
 
    PRINT *, "    reading MODIS PFTs data"
 
-   CALL check( nf90_open("global_0.5x0.5.MOD2005_V4.5.nc", nf90_nowrite, ncid) )
+   ! read 0.5deg PFT/lai/sai/htop data for urban lai calculating
+   CALL check( nf90_open("global_0.5x0.5.MOD"//TRIM(year)//"_V4.5.nc", nf90_nowrite, ncid) )
 
    CALL check( nf90_inq_varid(ncid, "PCT_PFT"        , pftvid     ) )
    CALL check( nf90_inq_varid(ncid, "MONTHLY_PFT_LAI", laivid     ) )
@@ -448,7 +455,7 @@ PROGRAM clmu2grid
    DO i = 1, nyo
       DO j = 1, nxo
          k = nyo - i + 1
-         ! pct_urban(j,i)     = npct_urban(j,k)
+         !pct_urban(j,i)     = npct_urban(j,k)
          htop_pft (j,i,:)   = nhtop_pft (j,k,:)
          pct_pft  (j,i,:)   = npct_pft  (j,k,:)
          lai_pft  (j,i,:,:) = nlai_pft  (j,k,:,:)
@@ -456,6 +463,7 @@ PROGRAM clmu2grid
       ENDDO
    ENDDO
 
+   ! output lat/lon
    DO i = 1, nyo
       lats1(i) = -90. + (i-1)*y_delta
       latn1(i) = -90. + i*y_delta
@@ -474,6 +482,7 @@ PROGRAM clmu2grid
       latso(i) =  -90. + i*y_delta - 0.5*y_delta
    ENDDO
 
+   ! model gird area
    DO i = 1, nyo
       dx = (lone1(1)-lonw1(1))*deg2rad
       dy = sin(latn1(i)*deg2rad) - sin(lats1(i)*deg2rad)
@@ -484,88 +493,90 @@ PROGRAM clmu2grid
    OPEN(12,FILE=REGFILE)
    
    DO WHILE(.TRUE.)
-     ! process global 500m raw data
-     PRINT *, "*** processing 500m raw data ***"
-     PRINT *, "    reading data"
-     READ(11,*,END=100) reg
-     READ(12,*,END=101) creg
-     filename = TRIM(SRF_DIR)//'RG_'//TRIM(creg(1))//'_'//&
-                TRIM(creg(2))//'_'//TRIM(creg(3))//'_'//TRIM(creg(4))//'.SRF.nc'
+      ! process global 500m raw data
+      ! read 500m surface data(pct_tree/pct_water)
+      ! NOTE: GEDI data not use yet
+      PRINT *, "*** processing 500m raw data ***"
+      PRINT *, "    reading data"
+      READ(11,*,END=100) reg
+      READ(12,*,END=101) creg
+      filename = TRIM(SRF_DIR)//'RG_'//TRIM(creg(1))//'_'//&
+                 TRIM(creg(2))//'_'//TRIM(creg(3))//'_'//TRIM(creg(4))//'.SRF'//TRIM(year)//'.nc'
 
-     PRINT*, filename
-     CALL check( nf90_open(TRIM(filename), nf90_nowrite, ncid) )
+      PRINT*, filename
+      CALL check( nf90_open(TRIM(filename), nf90_nowrite, ncid) )
 
-     CALL check( nf90_inq_varid(ncid, "lat"        , hlat_vid  ) )
-     CALL check( nf90_inq_varid(ncid, "lon"        , hlon_vid  ) )
-     CALL check( nf90_inq_varid(ncid, "PCT_Tree"   , gfcc_tcvid) )
-     !CALL check( nf90_inq_varid(ncid, "Hgt_Tree"   , gedi_thvid) )
-     CALL check( nf90_inq_varid(ncid, "PCT_Water"  , gl30_wtvid) )
+      CALL check( nf90_inq_varid(ncid, "lat"        , hlat_vid  ) )
+      CALL check( nf90_inq_varid(ncid, "lon"        , hlon_vid  ) )
+      CALL check( nf90_inq_varid(ncid, "PCT_Tree"   , gfcc_tcvid) )
+      !CALL check( nf90_inq_varid(ncid, "Hgt_Tree"   , gedi_thvid) )
+      CALL check( nf90_inq_varid(ncid, "PCT_Water"  , gl30_wtvid) )
 
-     CALL check( nf90_get_var(ncid, hlat_vid  , hlat   ) )
-     CALL check( nf90_get_var(ncid, hlon_vid  , hlon   ) )
-     CALL check( nf90_get_var(ncid, gfcc_tcvid, gfcc_tc) )
-     !CALL check( nf90_get_var(ncid, gedi_thvid, gedi_th) )
-     CALL check( nf90_get_var(ncid, gl30_wtvid, gl30_wt) )
+      CALL check( nf90_get_var(ncid, hlat_vid  , hlat   ) )
+      CALL check( nf90_get_var(ncid, hlon_vid  , hlon   ) )
+      CALL check( nf90_get_var(ncid, gfcc_tcvid, gfcc_tc) )
+      !CALL check( nf90_get_var(ncid, gedi_thvid, gedi_th) )
+      CALL check( nf90_get_var(ncid, gl30_wtvid, gl30_wt) )
 
-     CALL check( nf90_close(ncid) )
+      CALL check( nf90_close(ncid) )
 
-     PRINT *, "    reading 1km urban class data"
+      ! read NCAR 1km urban class and region id
+      PRINT *, "    reading 1km urban class data"
+      filename = TRIM(SRF_DIR)//'RG_'//TRIM(creg(1))//'_'//&
+                 TRIM(creg(2))//'_'//TRIM(creg(3))//'_'//TRIM(creg(4))//'.NCAR.nc'
+      CALL check( nf90_open(filename, nf90_nowrite, ncid) )
 
-     !PRINT *, "    reading 1km urban properties data"
-     filename = TRIM(SRF_DIR)//'RG_'//TRIM(creg(1))//'_'//&
-                TRIM(creg(2))//'_'//TRIM(creg(3))//'_'//TRIM(creg(4))//'.NCAR.nc'
-     CALL check( nf90_open(filename, nf90_nowrite, ncid) )
+      CALL check( nf90_inq_varid(ncid, "lat"                , urlat_vid ) )
+      CALL check( nf90_inq_varid(ncid, "lon"                , urlon_vid ) )
+      CALL check( nf90_inq_varid(ncid, "URBAN_DENSITY_CLASS", ur_clssvid) )
+      CALL check( nf90_inq_varid(ncid, "REGION_ID"          , ur_rgvid  ) )
 
-     CALL check( nf90_inq_varid(ncid, "lat"                , urlat_vid ) )
-     CALL check( nf90_inq_varid(ncid, "lon"                , urlon_vid ) )
-     CALL check( nf90_inq_varid(ncid, "URBAN_DENSITY_CLASS", ur_clssvid) )
-     CALL check( nf90_inq_varid(ncid, "REGION_ID"          , ur_rgvid  ) )
+      CALL check( nf90_get_var(ncid, urlat_vid   , urlat ) )
+      CALL check( nf90_get_var(ncid, urlon_vid   , urlon ) )
+      CALL check( nf90_get_var(ncid, ur_clssvid  , urden ) )
+      CALL check( nf90_get_var(ncid, ur_rgvid    , urrgid) )
 
-     CALL check( nf90_get_var(ncid, urlat_vid   , urlat ) )
-     CALL check( nf90_get_var(ncid, urlon_vid   , urlon ) )
-     CALL check( nf90_get_var(ncid, ur_clssvid  , urden ) )
-     CALL check( nf90_get_var(ncid, ur_rgvid    , urrgid) )
+      CALL check( nf90_close(ncid) )
 
-     CALL check( nf90_close(ncid) )
+      ! read 500m modis urban data
+      PRINT*, "    reading MOD URBAN data"
+      filename = TRIM(RAW_DIR)//'RG_'//TRIM(creg(1))//'_'//&
+                 TRIM(creg(2))//'_'//TRIM(creg(3))//'_'//TRIM(creg(4))//'.MOD'//TRIM(year)//'.nc'
+      ! PRINT*, filename
 
-     PRINT*, "    reading MOD URBAN data"
-     filename = TRIM(RAW_DIR)//'RG_'//TRIM(creg(1))//'_'//&
-                TRIM(creg(2))//'_'//TRIM(creg(3))//'_'//TRIM(creg(4))//'.MOD2005.nc'
-     PRINT*, filename
+      CALL check( nf90_open(filename, nf90_nowrite, ncid      ) )
+      CALL check( nf90_inq_varid(ncid, "PCT_URBAN", upftvid   ) )
+      CALL check( nf90_inq_varid(ncid, "HTOP"     , gedi_thvid) )
 
-     CALL check( nf90_open(filename, nf90_nowrite, ncid      ) )
-     CALL check( nf90_inq_varid(ncid, "PCT_URBAN", upftvid   ) )
-     CALL check( nf90_inq_varid(ncid, "HTOP"     , gedi_thvid) )
+      CALL check( nf90_get_var  (ncid, upftvid    , nmodur    ) )
+      CALL check( nf90_get_var  (ncid, gedi_thvid , ngedi_th  ) )
+      CALL check( nf90_close(ncid) )
 
-     CALL check( nf90_get_var  (ncid, upftvid    , nmodur    ) )
-     CALL check( nf90_get_var  (ncid, gedi_thvid , ngedi_th  ) )
-     CALL check( nf90_close(ncid) )
+      DO i = 1, 1200
+         k = 1200 - i + 1
+         !pct_urban(j,i)     = npct_urban(j,k)
+         modur  (:,i) = nmodur  (:,k)
+         gedi_th(:,i) = ngedi_th(:,k)
+      ENDDO
 
-     DO i = 1, 1200
-        k = 1200 - i + 1
-        ! pct_urban(j,i)     = npct_urban(j,k)
-        modur  (:,i) = nmodur  (:,k)
-        gedi_th(:,i) = ngedi_th(:,k)
-     ENDDO
-
-     ! calculate output lat/lon
-     ! calculate the edge of small grids
-     DO i = 1, nlat
-        hlats(i) = hlat(1) - sdelta/2. + (i-1)*sdelta
-        hlatn(i) = hlat(1) - sdelta/2. + i*sdelta
-     ENDDO
+      ! calculate the edge of small grids(500m)
+      DO i = 1, nlat
+         hlats(i) = hlat(1) - sdelta/2. + (i-1)*sdelta
+         hlatn(i) = hlat(1) - sdelta/2. + i*sdelta
+      ENDDO
    
-     DO i = 1, nlon
-        hlonw(i) = hlon(1) - sdelta/2. + (i-1)*sdelta
-        hlone(i) = hlon(1) - sdelta/2. + i*sdelta
-     ENDDO
+      DO i = 1, nlon
+         hlonw(i) = hlon(1) - sdelta/2. + (i-1)*sdelta
+         hlone(i) = hlon(1) - sdelta/2. + i*sdelta
+      ENDDO
    
-     DO i = 1, nlat
-        dx = (hlone(1)-hlonw(1))*deg2rad
-        dy = sin(hlatn(i)*deg2rad) - sin(hlats(i)*deg2rad)
-        harea(:,i) = dx*dy*re*re
-     ENDDO
+      DO i = 1, nlat
+         dx = (hlone(1)-hlonw(1))*deg2rad
+         dy = sin(hlatn(i)*deg2rad) - sin(hlats(i)*deg2rad)
+         harea(:,i) = dx*dy*re*re
+      ENDDO
 
+      ! calculate the edge of small grids(1km)
       DO i = 1, ulat
          urlatn(i) = urlat(1) - udelta/2. + i*udelta
          urlats(i) = urlat(1) - udelta/2. + (i-1)*udelta
@@ -587,37 +598,37 @@ PROGRAM clmu2grid
       DO i = 1, 1200
          DO j = 1, 1200
             ! calculate io, jo
-            ! ir = NINT((hlats(i)+sdelta/2+ 90.)/udelta+0.5)
-            ! jr = NINT((hlonw(j)+sdelta/2+180.)/udelta+0.5)
+            !ir = NINT((hlats(i)+sdelta/2+ 90.)/udelta+0.5)
+            !jr = NINT((hlonw(j)+sdelta/2+180.)/udelta+0.5)
             ir = CEILING(i*1._r8/2)
             jr = CEILING(j*1._r8/2)
             io = NINT((hlats(i)+sdelta/2+ 90.)/y_delta+0.5)
             jo = NINT((hlonw(j)+sdelta/2+180.)/x_delta+0.5)
 
-            !聚合Simard树高
-            !加权：
-            !粗网格树高=粗网格树高+simard树高*1km格点面积
-            !加权系数：粗网格格点面积
+            ! 聚合Simard树高
+            ! 加权：
+            ! 粗网格树高=粗网格树高+simard树高*1km格点面积
+            ! 加权系数：粗网格格点面积
             IF (gedi_th(j,i) > 0) THEN
                hgt(jo,io) = hgt(jo,io) + gedi_th(j,i)*harea(j,i)
                avg(jo,io) = avg(jo,io) + harea(j,i)
             ENDIF
 
             IF (urden(jr,ir) > 0) THEN
-             !Tall-Building-Distinc urban
+             ! Tall-Building-Distinc urban
                IF (urden(jr,ir) == 1) THEN
             
-               !加权：
-               !粗网格城市水体(植被)覆盖度=粗网格城市水体(植被)覆盖度+500m城市格点水体(植被)覆盖度*500m城市格点面积
-               !加权系数；粗网格城市格点面积
+               ! 加权：
+               ! 粗网格城市水体(植被)覆盖度=粗网格城市水体(植被)覆盖度+500m城市格点水体(植被)覆盖度*500m城市格点面积
+               ! 加权系数；粗网格城市格点面积
                   IF (gl30_wt(j,i) > 0.) THEN
                      urwt (jo,io,1) = urwt (jo,io,1) + gl30_wt(j,i)*harea(j,i)
                   ENDIF
                   IF (gfcc_tc(j,i) >0) THEN
                      tc   (jo,io,1) = tc   (jo,io,1) + gfcc_tc(j,i)*harea(j,i)
-                     !树高加权
-                     !粗网格城市树高=粗网格城市树高+500m城市格点植被覆盖度*城市格点树高*城市格点面积
-                     !加权系数:城市格点植被覆盖度*城市面积
+                     ! 树高加权
+                     ! 粗网格城市树高=粗网格城市树高+500m城市格点植被覆盖度*城市格点树高*城市格点面积
+                     ! 加权系数:城市格点植被覆盖度*城市面积
                      IF (gedi_th(j,i) > 0) THEN
                         htop(jo,io,1) = htop(jo,io,1) + gedi_th(j,i)*gfcc_tc(j,i)*harea(j,i)
                         wgt_top(jo,io,1) = wgt_top(jo,io,1) + gfcc_tc(j,i)*harea(j,i)
@@ -625,6 +636,7 @@ PROGRAM clmu2grid
                   ENDIF
                ENDIF
 
+               ! Hight-Density urban
                IF (urden(jr,ir) == 2 ) THEN
                   IF (gl30_wt(j,i) > 0.) THEN
                      urwt (jo,io,2) = urwt (jo,io,2) + gl30_wt(j,i)*harea(j,i)
@@ -638,6 +650,7 @@ PROGRAM clmu2grid
                   ENDIF
                ENDIF
 
+               ! Medium-Density urban
                IF (urden(jr,ir) == 3 ) THEN
                   IF (gl30_wt(j,i) > 0.) THEN
                      urwt (jo,io,3) = urwt (jo,io,3) + gl30_wt(j,i)*harea(j,i)
@@ -652,6 +665,7 @@ PROGRAM clmu2grid
                ENDIF
             ENDIF
 
+            ! 根据MODIS城市覆盖对城市格点补充，并将其归类为MD urban
             IF (urden(jr,ir)<=0 .and. modur(j,i)>0) THEN
                IF (gl30_wt(j,i) > 0.) THEN
                   urwt (jo,io,3) = urwt (jo,io,3) + gl30_wt(j,i)*harea(j,i)*modur(j,i)/100
@@ -791,7 +805,7 @@ PROGRAM clmu2grid
          ENDDO
       ENDDO
 
-      ! MODIS城市补全，归类为MD类型城市
+      ! MODIS城市属性补全，归类为MD类型城市
       DO i=1,1200
          DO j=1,1200
             ir = CEILING(i*1._r8/2)
@@ -799,11 +813,11 @@ PROGRAM clmu2grid
             io = NINT((hlat(i)+ 90.)/y_delta+0.5)
             jo = NINT((hlon(j)+180.)/x_delta+0.5)
 
-            ! IF (io>360 .or. jo>720)THEN
-            !    PRINT*, i,j
-            !    PRINT*, io,jo
-            !    PRINT*, hlonw(j)
-            ! ENDIF
+            !IF (io>360 .or. jo>720)THEN
+            !   PRINT*, i,j
+            !   PRINT*, io,jo
+            !   PRINT*, hlonw(j)
+            !ENDIF
 
             IF (urden(jr,ir)<=0 .and. modur(j,i)>0) THEN
                ur_dc(jo,io,3) = ur_dc(jo,io,3) + harea(j,i)*modur(j,i)/100
@@ -930,7 +944,7 @@ PROGRAM clmu2grid
 
          sumur = ur_dc(j,i,1) + ur_dc(j,i,2) + ur_dc(j,i,3)
          IF (sumur > 0.) THEN
-            ! calculate 3 type urban cover, sum(pct_ur(j,i,:))=100
+            ! calculate 3 types urban cover, sum(pct_ur(j,i,:))=100
             pct_ur(j,i,1) = ur_dc(j,i,1) / sumur * 100.
             pct_ur(j,i,2) = ur_dc(j,i,2) / sumur * 100.
             pct_ur(j,i,3) = ur_dc(j,i,3) / sumur * 100.
@@ -947,18 +961,12 @@ PROGRAM clmu2grid
    PRINT *, "********************************"   
    DO i = 1, nyo 
       DO j = 1, nxo
-         ! calculate urban lai
-         !-----------------------------------------------------
-         !             ___npft
-         ! urban_lai = \   pct_pft*pft_lai*(htop_gedi/htop_pft)
-         !             /__ 1
-         !-----------------------------------------------------      
-         ! 只需要考虑树(1-8类PFTs)
          DO k =1, 3
             IF (pct_tc(j,i,k) > 0 .and. htop_ur(j,i,k) == 0) THEN
                htop_ur(j,i,k) = hgt(j,i)
             ENDIF
 
+            ! 检查城市树高
             IF (pct_tc(j,i,k) > 0 .and. htop_ur(j,i,k) == 0) THEN
                DO p = 1, nxo
                   IF (hgt(p,i) > 0) THEN
@@ -976,6 +984,13 @@ PROGRAM clmu2grid
             ENDIF
          ENDDO
 
+         ! calculate urban lai
+         !-----------------------------------------------------
+         !             ___npft
+         ! urban_lai = \   pct_pft*pft_lai*(htop_gedi/htop_pft)
+         !             /__ 1
+         !-----------------------------------------------------
+         ! 只需要考虑树(1-8类PFTs)
          DO m = 2, 9
             IF (htop_pft(j,i,m) > 0) THEN
                fac(1) = htop_ur(j,i,1) / htop_pft(j,i,m)
@@ -989,7 +1004,7 @@ PROGRAM clmu2grid
                   ur_lai (j,i,3,k) = ur_lai(j,i,3,k)+wgt*lai_pft(j,i,m,k)*min(1.5,fac(3))
                   ur_sai (j,i,1,k) = ur_sai(j,i,1,k)+wgt*sai_pft(j,i,m,k)*min(1.5,fac(1))
                   ur_sai (j,i,2,k) = ur_sai(j,i,2,k)+wgt*sai_pft(j,i,m,k)*min(1.5,fac(2))
-                  ur_sai (j,i,3,k) = ur_sai(j,i,3,k)+wgt*sai_pft(j,i,m,k)*min(1.5,fac(3))!
+                  ur_sai (j,i,3,k) = ur_sai(j,i,3,k)+wgt*sai_pft(j,i,m,k)*min(1.5,fac(3))
                ENDDO
             ENDIF
          ENDDO
@@ -1059,7 +1074,7 @@ PROGRAM clmu2grid
    ENDDO
 
    
-   CALL check( nf90_create(TRIM(OUT_DIR)//"scolm_urban_data_modis222.nc", NF90_NETCDF4, ncid) )
+   CALL check( nf90_create(TRIM(OUT_DIR)//"scolm_urban_data_modis.nc", NF90_NETCDF4, ncid) )
 
    CALL check( nf90_def_dim(ncid, "lat"     , nyo     , lat_dimid ) )
    CALL check( nf90_def_dim(ncid, "lon"     , nxo     , lon_dimid ) )
@@ -1130,9 +1145,9 @@ PROGRAM clmu2grid
    CALL check( nf90_def_var(ncid, "ALB_IMPROAD", NF90_FLOAT, XY5D, alb_imrdvid ) )
    CALL check( nf90_def_var(ncid, "ALB_PERROAD", NF90_FLOAT, XY5D, alb_perdvid ) )
 
-   CALL check( nf90_put_att(ncid, pct_urvid , "units"     , "%"                                           ) )
-   CALL check( nf90_put_att(ncid, pct_urvid , "long_name" , "Percentage of each urban type (density)"     ) )
-   CALL check( nf90_put_att(ncid, pct_urvid , "_FillValue", fv                   ) )
+   CALL check( nf90_put_att(ncid, pct_urvid , "units"     , "%"                                          ) )
+   CALL check( nf90_put_att(ncid, pct_urvid , "long_name" , "Percentage of each urban type (density)"    ) )
+   CALL check( nf90_put_att(ncid, pct_urvid , "_FillValue", fv) )
 
    CALL check( nf90_put_att(ncid, pct_tcvid, "units"     , "%"                                           ) )
    CALL check( nf90_put_att(ncid, pct_tcvid, "long_name" , "Urban percent tree cover"                    ) )
@@ -1244,113 +1259,113 @@ PROGRAM clmu2grid
 
    CALL check( nf90_enddef(ncid) )
    
-   CALL check( nf90_inq_varid(ncid, "lat"     , urlat_vid       ) )
-   CALL check( nf90_put_var  (ncid, urlat_vid , flatso          ) )
+   CALL check( nf90_inq_varid(ncid, "lat"            , urlat_vid  ) )
+   CALL check( nf90_put_var  (ncid, urlat_vid        , flatso     ) )
 
-   CALL check( nf90_inq_varid(ncid, "lon"     , urlon_vid       ) )
-   CALL check( nf90_put_var  (ncid, urlon_vid , lonso           ) )
+   CALL check( nf90_inq_varid(ncid, "lon"            , urlon_vid  ) )
+   CALL check( nf90_put_var  (ncid, urlon_vid        , lonso      ) )
 
-   call check( nf90_inq_varid(ncid, "numsolar", ns_vid         ) )
-   CALL check( nf90_put_var  (ncid, ns_vid    , n_ns           ) )
+   call check( nf90_inq_varid(ncid, "numsolar"       , ns_vid     ) )
+   CALL check( nf90_put_var  (ncid, ns_vid           , n_ns       ) )
 
-   CALL check( nf90_inq_varid(ncid, "numrad"  , nr_vid           ) )
-   CALL check( nf90_put_var  (ncid, nr_vid    , n_nr             ) )
+   CALL check( nf90_inq_varid(ncid, "numrad"         , nr_vid     ) )
+   CALL check( nf90_put_var  (ncid, nr_vid           , n_nr       ) )
 
-   CALL check( nf90_inq_varid(ncid, "month"   , mon_vid         ) )
-   CALL check( nf90_put_var  (ncid, mon_vid   , n_mon           ) )
+   CALL check( nf90_inq_varid(ncid, "month"          , mon_vid    ) )
+   CALL check( nf90_put_var  (ncid, mon_vid          , n_mon      ) )
 
-   CALL check( nf90_inq_varid(ncid, "density" , den_vid         ) )
-   CALL check( nf90_put_var  (ncid, den_vid   , n_den           ) )
+   CALL check( nf90_inq_varid(ncid, "density"        , den_vid    ) )
+   CALL check( nf90_put_var  (ncid, den_vid          , n_den      ) )
 
-   CALL check( nf90_inq_varid(ncid, "ulev"    , lev_vid) )
-   CALL check( nf90_put_var  (ncid, lev_vid   , n_ulev) )
+   CALL check( nf90_inq_varid(ncid, "ulev"           , lev_vid    ) )
+   CALL check( nf90_put_var  (ncid, lev_vid          , n_ulev     ) )
 
-   CALL check( nf90_inq_varid(ncid, "URBAN_TREE_PCT", pct_tcvid      ) )
-   CALL check( nf90_put_var  (ncid, pct_tcvid , fpct_tc         ) )
+   CALL check( nf90_inq_varid(ncid, "URBAN_TREE_PCT" , pct_tcvid  ) )
+   CALL check( nf90_put_var  (ncid, pct_tcvid        , fpct_tc    ) )
 
-   CALL check( nf90_inq_varid(ncid, "URBAN_WATER_PCT" , pct_urwtvid   ) )
-   CALL check( nf90_put_var  (ncid, pct_urwtvid, fpct_urwt      ) )
+   CALL check( nf90_inq_varid(ncid, "URBAN_WATER_PCT", pct_urwtvid) )
+   CALL check( nf90_put_var  (ncid, pct_urwtvid      , fpct_urwt  ) )
 
-   CALL check( nf90_inq_varid(ncid, "URBAN_TREE_TOP" , htop_urvid     ) )
-   CALL check( nf90_put_var  (ncid, htop_urvid, fhtop_ur        ) )
+   CALL check( nf90_inq_varid(ncid, "URBAN_TREE_TOP" , htop_urvid ) )
+   CALL check( nf90_put_var  (ncid, htop_urvid       , fhtop_ur   ) )
 
-   CALL check( nf90_inq_varid(ncid, "URBAN_TREE_LAI", ur_laivid     ) )
-   CALL check( nf90_put_var  (ncid, ur_laivid  , fur_lai        ) )
+   CALL check( nf90_inq_varid(ncid, "URBAN_TREE_LAI" , ur_laivid  ) )
+   CALL check( nf90_put_var  (ncid, ur_laivid        , fur_lai    ) )
 
-   CALL check( nf90_inq_varid(ncid, "URBAN_TREE_SAI", ur_saivid     ) )
-   CALL check( nf90_put_var  (ncid, ur_saivid  , fur_sai        ) )
+   CALL check( nf90_inq_varid(ncid, "URBAN_TREE_SAI" , ur_saivid  ) )
+   CALL check( nf90_put_var  (ncid, ur_saivid        , fur_sai    ) )
 
-   CALL check( nf90_inq_varid(ncid, "CANYON_HWR", hwr_canvid   ) )
-   CALL check( nf90_put_var  (ncid,hwr_canvid,fhwr_can          ) )
+   CALL check( nf90_inq_varid(ncid, "CANYON_HWR"     , hwr_canvid ) )
+   CALL check( nf90_put_var  (ncid,hwr_canvid        , fhwr_can   ) )
 
-   CALL check( nf90_inq_varid(ncid, "WTLUNIT_ROOF",wt_rfvid    ) )
-   CALL check( nf90_put_var(ncid,wt_rfvid,fwt_rf                ) )
+   CALL check( nf90_inq_varid(ncid, "WTLUNIT_ROOF"   , wt_rfvid   ) )
+   CALL check( nf90_put_var  (ncid, wt_rfvid         , fwt_rf     ) )
 
-   CALL check( nf90_inq_varid(ncid, "WTROAD_PERV",wt_rdvid     ) )
-   CALL check( nf90_put_var(ncid,wt_rdvid, fwt_rd               ) )
+   CALL check( nf90_inq_varid(ncid, "WTROAD_PERV"    , wt_rdvid   ) )
+   CALL check( nf90_put_var  (ncid, wt_rdvid         , fwt_rd     ) )
 
-   CALL check( nf90_inq_varid(ncid, "EM_ROOF",em_rfvid         ) )
-   CALL check( nf90_put_var(ncid,em_rfvid,fem_rf                ) )
+   CALL check( nf90_inq_varid(ncid, "EM_ROOF"        , em_rfvid   ) )
+   CALL check( nf90_put_var  (ncid, em_rfvid         , fem_rf     ) )
 
-   CALL check( nf90_inq_varid(ncid, "EM_WALL",em_wlvid         ) )
-   CALL check( nf90_put_var(ncid,em_wlvid,fem_wl                ) )
+   CALL check( nf90_inq_varid(ncid, "EM_WALL"        , em_wlvid   ) )
+   CALL check( nf90_put_var  (ncid, em_wlvid         , fem_wl     ) )
 
-   CALL check( nf90_inq_varid(ncid, "EM_IMPROAD",em_imrdvid    ) )
-   CALL check( nf90_put_var(ncid,em_imrdvid,fem_imrd            ) )
+   CALL check( nf90_inq_varid(ncid, "EM_IMPROAD"     , em_imrdvid ) )
+   CALL check( nf90_put_var  (ncid, em_imrdvid       , fem_imrd   ) )
 
-   CALL check( nf90_inq_varid(ncid, "EM_PERROAD",em_perdvid    ) )
-   CALL check( nf90_put_var(ncid,em_perdvid,fem_perd            ) )
+   CALL check( nf90_inq_varid(ncid, "EM_PERROAD"     , em_perdvid ) )
+   CALL check( nf90_put_var  (ncid, em_perdvid       , fem_perd   ) )
 
-   CALL check( nf90_inq_varid(ncid, "HT_ROOF",ht_rfvid         ) )
-   CALL check( nf90_put_var(ncid,ht_rfvid,fht_rf                ) )
+   CALL check( nf90_inq_varid(ncid, "HT_ROOF"        , ht_rfvid   ) )
+   CALL check( nf90_put_var  (ncid, ht_rfvid         , fht_rf     ) )
 
    !CALL check( nf90_inq_varid(ncid, "WIND_HGT_CANYON",whcvid   ) )
    !CALL check( nf90_put_var(ncid,whcvid,w_hc                   ) )
 
-   CALL check( nf90_inq_varid(ncid, "THICK_ROOF",th_rfvid      ) )
-   CALL check( nf90_put_var(ncid,th_rfvid,fth_rf                ) )
+   CALL check( nf90_inq_varid(ncid, "THICK_ROOF"     , th_rfvid   ) )
+   CALL check( nf90_put_var  (ncid, th_rfvid         , fth_rf     ) )
 
-   CALL check( nf90_inq_varid(ncid, "THICK_WALL",th_wlvid      ) )
-   CALL check( nf90_put_var(ncid,th_wlvid,fth_wl                ) )
+   CALL check( nf90_inq_varid(ncid, "THICK_WALL"     , th_wlvid   ) )
+   CALL check( nf90_put_var  (ncid, th_wlvid         , fth_wl     ) )
 
-   CALL check( nf90_inq_varid(ncid, "T_BUILDING_MIN",tbminvid  ) )
-   CALL check( nf90_put_var(ncid,tbminvid,ftb_min               ) )
+   CALL check( nf90_inq_varid(ncid, "T_BUILDING_MIN" , tbminvid   ) )
+   CALL check( nf90_put_var  (ncid, tbminvid         , ftb_min    ) )
 
-   CALL check( nf90_inq_varid(ncid, "T_BUILDING_MAX",tbmaxvid  ) )
-   CALL check( nf90_put_var(ncid,tbmaxvid,ftb_max               ) )
+   CALL check( nf90_inq_varid(ncid, "T_BUILDING_MAX" , tbmaxvid   ) )
+   CALL check( nf90_put_var  (ncid, tbmaxvid         , ftb_max    ) )
 
-   CALL check( nf90_inq_varid(ncid, "URBAN_PCT", pct_urvid     ) )
-   CALL check( nf90_put_var(ncid,pct_urvid,fpct_ur              ) )
+   CALL check( nf90_inq_varid(ncid, "URBAN_PCT"      , pct_urvid  ) )
+   CALL check( nf90_put_var  (ncid, pct_urvid        , fpct_ur    ) )
 
-   CALL check( nf90_inq_varid(ncid, "TK_ROOF",tk_rfvid         ) )
-   CALL check( nf90_put_var(ncid,tk_rfvid,ftk_rf                ) )
+   CALL check( nf90_inq_varid(ncid, "TK_ROOF"        , tk_rfvid   ) )
+   CALL check( nf90_put_var  (ncid, tk_rfvid         , ftk_rf     ) )
 
-   CALL check( nf90_inq_varid(ncid, "TK_WALL",tk_wlvid         ) )
-   CALL check( nf90_put_var(ncid,tk_wlvid,ftk_wl                ) )
+   CALL check( nf90_inq_varid(ncid, "TK_WALL"        , tk_wlvid   ) )
+   CALL check( nf90_put_var  (ncid, tk_wlvid         , ftk_wl     ) )
 
-   CALL check( nf90_inq_varid(ncid, "TK_IMPROAD",tk_imrdvid    ) )
-   CALL check( nf90_put_var(ncid,tk_imrdvid,ftk_imrd            ) )
+   CALL check( nf90_inq_varid(ncid, "TK_IMPROAD"     , tk_imrdvid ) )
+   CALL check( nf90_put_var  (ncid, tk_imrdvid       , ftk_imrd   ) )
 
-   CALL check( nf90_inq_varid(ncid, "CV_ROOF",cv_rfvid         ) )
-   CALL check( nf90_put_var(ncid,cv_rfvid,fcv_rf                ) )
+   CALL check( nf90_inq_varid(ncid, "CV_ROOF"        , cv_rfvid   ) )
+   CALL check( nf90_put_var  (ncid, cv_rfvid         , fcv_rf     ) )
 
-   CALL check( nf90_inq_varid(ncid, "CV_WALL",cv_wlvid         ) )
-   CALL check( nf90_put_var(ncid,cv_wlvid,fcv_wl                ) )
+   CALL check( nf90_inq_varid(ncid, "CV_WALL"        , cv_wlvid   ) )
+   CALL check( nf90_put_var  (ncid, cv_wlvid         , fcv_wl     ) )
 
-   CALL check( nf90_inq_varid(ncid, "CV_IMPROAD",cv_imrdvid    ) )
-   CALL check( nf90_put_var(ncid,cv_imrdvid,fcv_imrd            ) )
+   CALL check( nf90_inq_varid(ncid, "CV_IMPROAD"     , cv_imrdvid ) )
+   CALL check( nf90_put_var  (ncid, cv_imrdvid       , fcv_imrd   ) )
 
-   CALL check( nf90_inq_varid(ncid, "ALB_ROOF",alb_rfvid       ) )
-   CALL check( nf90_put_var(ncid,alb_rfvid,falb_rf              ) )
+   CALL check( nf90_inq_varid(ncid, "ALB_ROOF"       , alb_rfvid  ) )
+   CALL check( nf90_put_var  (ncid, alb_rfvid        , falb_rf    ) )
 
-   CALL check( nf90_inq_varid(ncid, "ALB_WALL",alb_wlvid       ) )
-   CALL check( nf90_put_var(ncid,alb_wlvid,falb_wl              ) )
+   CALL check( nf90_inq_varid(ncid, "ALB_WALL"       , alb_wlvid  ) )
+   CALL check( nf90_put_var  (ncid, alb_wlvid        , falb_wl    ) )
 
-   CALL check( nf90_inq_varid(ncid, "ALB_IMPROAD",alb_imrdvid  ) )
-   CALL check( nf90_put_var(ncid,alb_imrdvid,falb_imrd          ) )
+   CALL check( nf90_inq_varid(ncid, "ALB_IMPROAD"    , alb_imrdvid) )
+   CALL check( nf90_put_var  (ncid, alb_imrdvid      , falb_imrd  ) )
 
-   CALL check( nf90_inq_varid(ncid, "ALB_PERROAD",alb_perdvid  ) )
-   CALL check( nf90_put_var(ncid,alb_perdvid,falb_perd          ) )
+   CALL check( nf90_inq_varid(ncid, "ALB_PERROAD"    , alb_perdvid) )
+   CALL check( nf90_put_var  (ncid, alb_perdvid      , falb_perd  ) )
 
    CALL check( nf90_close(ncid) )
 
@@ -1393,19 +1408,19 @@ PROGRAM clmu2grid
    DEALLOCATE( lurrgid )
    DEALLOCATE( urrgid  )
 
-   DEALLOCATE( latso      )
-   DEALLOCATE( lonso      )
-   DEALLOCATE( area       )
-   DEALLOCATE( pct_urban  )
-   DEALLOCATE( npct_urban )
-   DEALLOCATE( htop_pft   )
-   DEALLOCATE( nhtop_pft  )
-   DEALLOCATE( pct_pft    )
-   DEALLOCATE( npct_pft   )
-   DEALLOCATE( lai_pft    )
-   DEALLOCATE( nlai_pft   )
-   DEALLOCATE( ur_dc      )
-   DEALLOCATE( pct_ur     )
+   DEALLOCATE( latso     )
+   DEALLOCATE( lonso     )
+   DEALLOCATE( area      )
+   DEALLOCATE( pct_urban )
+   DEALLOCATE( npct_urban)
+   DEALLOCATE( htop_pft  )
+   DEALLOCATE( nhtop_pft )
+   DEALLOCATE( pct_pft   )
+   DEALLOCATE( npct_pft  )
+   DEALLOCATE( lai_pft   )
+   DEALLOCATE( nlai_pft  )
+   DEALLOCATE( ur_dc     )
+   DEALLOCATE( pct_ur    )
 
    DEALLOCATE( pct_tc    )
    DEALLOCATE( pct_urwt  )
