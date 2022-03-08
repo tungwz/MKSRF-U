@@ -29,7 +29,7 @@ Program Aggre
  CHARACTER(len=4)   :: year = '2020'
  CHARACTER(len=255) :: ncfile
  CHARACTER(len=255) :: infile = './ncgl' 
- CHARACTER(len=255) :: watfile= '/hard/dongwz/CoLM-U/waterbody/Water2010_500m.nc'
+ CHARACTER(len=255) :: watfile= '/hard/dongwz/CoLM-U/waterbody/'
  
  ALLOCATE( nclat(nlat) )
  ALLOCATE( nclon(nlon) )
@@ -57,9 +57,9 @@ Program Aggre
     nclon(i) = (i-1)*delta + nclon(1)
  ENDDO
     
- CALL check( nf90_create(watfile, NF90_NETCDF4, ncid) )
+ CALL check( nf90_create(watfile//'Water500m_'//trim(year)//'.nc', NF90_NETCDF4, ncid) )
  
- CALL check( nf90_put_att(ncid, NF90_GLOBAL, 'created by', 'Wenzong Dong Wed Aug 18 CST 2021') )
+ CALL check( nf90_put_att(ncid, NF90_GLOBAL, 'created by', 'Wenzong Dong Wed Mar 1 CST 2022') )
 
  CALL check( nf90_def_dim(ncid, 'lat', nlat, xx) )
  CALL check( nf90_def_dim(ncid, 'lon', nlon, yy) )
@@ -124,9 +124,12 @@ Program Aggre
              clon = lon(i)
           ENDIF
 
+          ! 计算在哪个500m格子
           tlat = NINT((clat+ 90.)/delta+0.5)
           tlon = NINT((clon+180.)/delta+0.5)
 
+
+          ! 只有当band=60时累加(水体)
           IF (band1(i,j).ne.0 .and. band1(i,j).ne.255) THEN
                 IF (band1(i,j) .eq. 60) THEN
                     watdata(tlon,tlat) = watdata(tlon,tlat) + 1.

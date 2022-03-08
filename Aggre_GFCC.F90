@@ -126,9 +126,11 @@ Program Aggre
           clat = lat(j) + hdelta/2.
           clon = lon(i) + hdelta/2.
 
+          ! 计算在哪个500m格子上
           tlat = NINT((clat+ 90.)/delta+0.5)
           tlon = NINT((clon+180.)/delta+0.5)
 
+          ! 当band>=0且band<=100时累加，并计算有效值数量(cntdata)，用与求平均
           IF (band1(i,j)>=0 .and. band1(i,j)<=100) THEN
              sumdata(tlon,tlat) = sumdata(tlon,tlat) + band1(i,j)
              cntdata(tlon,tlat) = cntdata(tlon,tlat) + 1
