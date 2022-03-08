@@ -25,7 +25,7 @@ Program Aggre
  INTEGER  :: nyo , nxo
  INTEGER  :: xid , yid
  INTEGER  :: i   , j
- INTEGER  :: ncid, tree_id, lat_id, lon_id
+ INTEGER  :: ncid, tree_id, lat_id, lon_id, nid, nclat_id, nclon_id, band_id
  INTEGER  :: xx  , yy
  INTEGER  :: argn
  
@@ -60,29 +60,29 @@ Program Aggre
     nclon(i) = (i-1)*delta + nclon(1)
  ENDDO
 
- CALL check( nf90_create(trim(outfile)//'GFCC500m_'//trim(year)//'.nc', NF90_NETCDF4, ncid) )
+! CALL check( nf90_create(trim(outfile)//'GFCC500m_test'//trim(year)//'.nc', NF90_NETCDF4, ncid) )
  
- CALL check( nf90_put_att(ncid, NF90_GLOBAL, 'created by', 'Wenzong Dong Tuesday Mar 1 CST 2022') )
+! CALL check( nf90_put_att(ncid, NF90_GLOBAL, 'created by', 'Wenzong Dong Tuesday Mar 1 CST 2022') )
 
- CALL check( nf90_def_dim(ncid, 'lat', nlat, xx) )
- CALL check( nf90_def_dim(ncid, 'lon', nlon, yy) )
+! CALL check( nf90_def_dim(ncid, 'lat', nlat, xx) )
+! CALL check( nf90_def_dim(ncid, 'lon', nlon, yy) )
 
- CALL check( nf90_def_var(ncid, 'lat' , NF90_FLOAT     , (/xx/), lat_id, deflate_level=6) )
- CALL check( nf90_put_att(ncid, lat_id, 'standard_name', 'latitude'     ) )
- CALL check( nf90_put_att(ncid, lat_id, 'long_name'    , 'latitude'     ) )
- CALL check( nf90_put_att(ncid, lat_id, 'units'        , 'degrees_north') )
+! CALL check( nf90_def_var(ncid, 'lat' , NF90_FLOAT     , (/xx/), nclat_id, deflate_level=6) )
+! CALL check( nf90_put_att(ncid, nclat_id, 'standard_name', 'latitude'     ) )
+! CALL check( nf90_put_att(ncid, nclat_id, 'long_name'    , 'latitude'     ) )
+! CALL check( nf90_put_att(ncid, nclat_id, 'units'        , 'degrees_north') )
 
- CALL check( nf90_def_var(ncid, 'lon' , NF90_FLOAT     , (/yy/), lon_id, deflate_level=6) )
- CALL check( nf90_put_att(ncid, lon_id, 'standard_name', 'longitude'   ) )
- CALL check( nf90_put_att(ncid, lon_id, 'long_name'    , 'longitude'   ) )
- CALL check( nf90_put_att(ncid, lon_id, 'units'        , 'degrees_east') )
+! CALL check( nf90_def_var(ncid, 'lon' , NF90_FLOAT     , (/yy/), nclon_id, deflate_level=6) )
+! CALL check( nf90_put_att(ncid, nclon_id, 'standard_name', 'longitude'   ) )
+! CALL check( nf90_put_att(ncid, nclon_id, 'long_name'    , 'longitude'   ) )
+! CALL check( nf90_put_att(ncid, nclon_id, 'units'        , 'degrees_east') )
 
- CALL check( nf90_def_var(ncid, 'PCT_Tree', NF90_FLOAT  , (/yy,xx/), tree_id, deflate_level=6) )
- CALL check( nf90_put_att(ncid, tree_id   , 'long_name' , 'forest cover'    ) )
- CALL check( nf90_put_att(ncid, tree_id   , 'units'     , '%'               ) )
- CALL check( nf90_put_att(ncid, tree_id   , '_FillValue', spval             ) )
+! CALL check( nf90_def_var(ncid, 'PCT_Tree', NF90_FLOAT  , (/yy,xx/), tree_id, deflate_level=6) )
+! CALL check( nf90_put_att(ncid, tree_id   , 'long_name' , 'forest cover'    ) )
+! CALL check( nf90_put_att(ncid, tree_id   , 'units'     , '%'               ) )
+! CALL check( nf90_put_att(ncid, tree_id   , '_FillValue', spval             ) )
 
- CALL check( nf90_enddef(ncid) )
+! CALL check( nf90_enddef(ncid) )
 
  OPEN(11, file=trim(infile)//trim(year))
 
@@ -91,31 +91,33 @@ Program Aggre
     READ(11,*,end=100) ncfile                     
     PRINT*, ncfile
 
-    CALL check( nf90_open('/hard/dongwz/GFCC/'//trim(year)//'/'//trim(ncfile), NF90_NOWRITE, ncid  ) )
+    CALL check( nf90_open('/hard/dongwz/GFCC/'//trim(year)//'/'//trim(ncfile), NF90_NOWRITE, nid  ) )
 
-    CALL check( nf90_inq_dimid        (ncid, 'lat' , lat_id ) )
-    CALL check( nf90_inquire_dimension(ncid, lat_id, len=nyo) )
+    CALL check( nf90_inq_dimid        (nid, 'lat' , lat_id ) )
+    CALL check( nf90_inquire_dimension(nid, lat_id, len=nyo) )
 
-    CALL check( nf90_inq_dimid        (ncid, 'lon' , lon_id ) )
-    CALL check( nf90_inquire_dimension(ncid, lon_id, len=nxo) )
+    CALL check( nf90_inq_dimid        (nid, 'lon' , lon_id ) )
+    CALL check( nf90_inquire_dimension(nid, lon_id, len=nxo) )
 
     print*, nyo,nxo
     ALLOCATE( lat(nyo) )
     ALLOCATE( lon(nxo) )
 
-    ALLOCATE(band1(nxo,nyo) )
+    ALLOCATE( band1(nxo,nyo) )
 
-    CALL check( nf90_inq_varid(ncid, 'lat' , lat_id) )
-    CALL check( nf90_get_var  (ncid, lat_id, lat   ) )
+    CALL check( nf90_inq_varid(nid, 'lat' , lat_id) )
+    CALL check( nf90_get_var  (nid, lat_id, lat   ) )
 
-    CALL check( nf90_inq_varid(ncid, 'lon' , lon_id) )
-    CALL check( nf90_get_var  (ncid, lon_id, lon   ) )
+    CALL check( nf90_inq_varid(nid, 'lon' , lon_id) )
+    CALL check( nf90_get_var  (nid, lon_id, lon   ) )
 
-    CALL check( nf90_inq_varid(ncid, 'Band1', tree_id) )
-    CALL check( nf90_get_var  (ncid, tree_id , band1 ) )
+    CALL check( nf90_inq_varid(nid, 'Band1', band_id) )
+    CALL check( nf90_get_var  (nid, band_id, band1  ) )
  
-    CALL check( nf90_close(ncid) )
+    CALL check( nf90_close(nid) )
 
+    !print*, "strat processing"
+    !write(*,*) "线程数为:",omp_get_num_procs()
 !$OMP PARALLEL DO NUM_THREADS(92) &
 !$OMP PRIVATE(i,j,clat,clon,tlat,tlon)
     DO i=1,nxo
@@ -134,6 +136,7 @@ Program Aggre
        ENDDO
     ENDDO
 !$OMP END PARALLEL DO
+    !print*, "end"
 
     DEALLOCATE( lat   )
     DEALLOCATE( lon   )
@@ -149,12 +152,36 @@ Program Aggre
        ENDIF
     ENDDO
  ENDDO 
-    
- CALL check( nf90_inq_varid(ncid, 'lat' , lat_id) )
- CALL check( nf90_put_var  (ncid, lat_id, nclat ) )
 
- CALL check( nf90_inq_varid(ncid, 'lon' , lon_id) )
- CALL check( nf90_put_var  (ncid, lon_id, nclon ) )
+ CALL check( nf90_create(trim(outfile)//'GFCC500mtest'//trim(year)//'.nc', NF90_NETCDF4, ncid) )
+
+ CALL check( nf90_put_att(ncid, NF90_GLOBAL, 'created by', 'Wenzong Dong Tuesday Mar 1 CST 2022') )
+
+ CALL check( nf90_def_dim(ncid, 'lat', nlat, xx) )
+ CALL check( nf90_def_dim(ncid, 'lon', nlon, yy) )
+
+ CALL check( nf90_def_var(ncid, 'lat' , NF90_FLOAT     , (/xx/), nclat_id, deflate_level=6) )
+ CALL check( nf90_put_att(ncid, nclat_id, 'standard_name', 'latitude'     ) )
+ CALL check( nf90_put_att(ncid, nclat_id, 'long_name'    , 'latitude'     ) )
+ CALL check( nf90_put_att(ncid, nclat_id, 'units'        , 'degrees_north') )
+
+ CALL check( nf90_def_var(ncid, 'lon' , NF90_FLOAT     , (/yy/), nclon_id, deflate_level=6) )
+ CALL check( nf90_put_att(ncid, nclon_id, 'standard_name', 'longitude'   ) )
+ CALL check( nf90_put_att(ncid, nclon_id, 'long_name'    , 'longitude'   ) )
+ CALL check( nf90_put_att(ncid, nclon_id, 'units'        , 'degrees_east') )
+
+ CALL check( nf90_def_var(ncid, 'PCT_Tree', NF90_FLOAT  , (/yy,xx/), tree_id, deflate_level=6) )
+ CALL check( nf90_put_att(ncid, tree_id   , 'long_name' , 'forest cover'    ) )
+ CALL check( nf90_put_att(ncid, tree_id   , 'units'     , '%'               ) )
+ CALL check( nf90_put_att(ncid, tree_id   , '_FillValue', spval             ) )
+
+ CALL check( nf90_enddef(ncid) )
+
+ CALL check( nf90_inq_varid(ncid, 'lat' , nclat_id) )
+ CALL check( nf90_put_var  (ncid, nclat_id, nclat ) )
+
+ CALL check( nf90_inq_varid(ncid, 'lon' , nclon_id) )
+ CALL check( nf90_put_var  (ncid, nclon_id, nclon ) )
 
  CALL check( nf90_inq_varid(ncid, 'PCT_Tree', tree_id) )
  CALL check( nf90_put_var  (ncid, tree_id   , outdata) )
@@ -175,7 +202,7 @@ Program Aggre
     IF(status /= nf90_noerr) THEN
       print *, trim(nf90_strerror(status))
       stop "Stopped"
-    ENDIF
+    END IF
  END SUBROUTINE check
 
 END PROGRAM Aggre

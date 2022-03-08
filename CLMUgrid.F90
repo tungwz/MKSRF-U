@@ -124,13 +124,13 @@ PROGRAM clmu2grid
    INTEGER :: uxid, uyid, upftvid, mon_dimid, den_dimid
    INTEGER :: den_vid, mon_vid, ur_landvid, saivid, ur_saivid, ur_denvid
 
-   CHARACTER(len=255) :: SRF_DIR='/hard/dongwz/github/CLMUgrid/v4/srf_5x5/'
-   CHARACTER(len=255) :: RAW_DIR='/hard/yuanhua/mksrf/srf_5x5/'
-   CHARACTER(len=255) :: OUT_DIR='/hard/dongwz/urban_data/'
+   CHARACTER(len=255) :: SRF_DIR='/hard/dongwz/github/MKSRF-U/srf_5x5/'
+   CHARACTER(len=255) :: RAW_DIR='/hard/dongwz/modis/mksrf/srf_5x5/'
+   CHARACTER(len=255) :: OUT_DIR='./'
    CHARACTER(len=255) :: REGFILE='reg_5x5'
    CHARACTER(len=255) :: filename
    CHARACTER(len=4)    , DIMENSION(4) :: creg
-   CHARACTER          :: year="2005"
+   CHARACTER(len=4)   :: year="2005"
 
    REAL(r8) :: fac(3)
    REAL(r8) :: pi, deg2rad, re, dx, dy, sumarea, sumur, sumpct
@@ -501,7 +501,7 @@ PROGRAM clmu2grid
       READ(11,*,END=100) reg
       READ(12,*,END=101) creg
       filename = TRIM(SRF_DIR)//'RG_'//TRIM(creg(1))//'_'//&
-                 TRIM(creg(2))//'_'//TRIM(creg(3))//'_'//TRIM(creg(4))//'.SRF'//TRIM(year)//'.nc'
+                 TRIM(creg(2))//'_'//TRIM(creg(3))//'_'//TRIM(creg(4))//'.SRF'//'.nc' !TRIM(year)//'.nc'
 
       PRINT*, filename
       CALL check( nf90_open(TRIM(filename), nf90_nowrite, ncid) )
