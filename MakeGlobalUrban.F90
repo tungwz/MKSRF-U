@@ -121,7 +121,7 @@ PROGRAM clmu2grid
    INTEGER :: uxid, uyid, upftvid, mon_dimid, den_dimid
    INTEGER :: den_vid, mon_vid, ur_landvid, saivid, ur_saivid, ur_denvid
 
-   CHARACTER(len=255) :: SRF_DIR='/hard/dongwz/github/MKSRF-U/srf_5x5/'
+   CHARACTER(len=255) :: SRF_DIR='/hard/dongwz/CoLM-U/srfu_5x5/'
    CHARACTER(len=255) :: RAW_DIR='/hard/dongwz/modis/mksrf/srf_5x5/'
    CHARACTER(len=255) :: OUT_DIR='./'
    CHARACTER(len=255) :: REGFILE='reg_5x5'
@@ -289,6 +289,8 @@ PROGRAM clmu2grid
    cont = 0.
    sumth= 0.
 
+   fileNotExists = .FALSE.
+
    x_delta = (360._r8/nxo)*1._r8
    y_delta = (180._r8/nyo)*1._r8
 
@@ -348,7 +350,7 @@ PROGRAM clmu2grid
    CALL check( nf90_close(ncid) )
 
    ! 仅仅用于一些特殊格点的城市ID赋值
-   CALL check( nf90_open("urban_properties_data.5deg.211121-164510.nc", nf90_nowrite, ncid) )
+   CALL check( nf90_open("urban_properties_data.5deg.nc", nf90_nowrite, ncid) )
 
    CALL check( nf90_inq_varid(ncid, "REGION_ID", ur_rgvid) )
    CALL check( nf90_get_var(ncid  , ur_rgvid   , lurrgid ) )
@@ -358,7 +360,7 @@ PROGRAM clmu2grid
    PRINT *, "    reading MODIS PFTs data"
 
    ! read model grid PFT/lai/sai/htop data for urban lai calculating
-   filename = "global_0.5x0.5.MOD"//TRIM(year)//"_V4.5.nc"
+   filename = "global_0.5x0.5.MOD"//TRIM(year)//"_v5.nc"
    inquire (file=filename, exist=fileExists)
    IF (fileExists) THEN
       ! 如果对应分辨率的全球PFTs/LAI/SAI/HTOP_PFT的文件已经生成
@@ -407,7 +409,7 @@ PROGRAM clmu2grid
    ENDDO
 
    DO i = 1, nyo
-      latso(i) =  -90. + i*y_delta - 0.5*y_delta
+      latso(i) =  90. - i*y_delta + 0.5*y_delta
    ENDDO
 
    ! model gird area
@@ -429,7 +431,7 @@ PROGRAM clmu2grid
       READ(11,*,END=100) reg
       READ(12,*,END=101) creg
       filename = TRIM(SRF_DIR)//'RG_'//TRIM(creg(1))//'_'//&
-                 TRIM(creg(2))//'_'//TRIM(creg(3))//'_'//TRIM(creg(4))//'.SRF'//'.nc' !TRIM(year)//'.nc'
+                 TRIM(creg(2))//'_'//TRIM(creg(3))//'_'//TRIM(creg(4))//'.SRF'//TRIM(year)//'.nc' !TRIM(year)//'.nc'
 
       PRINT*, filename
       CALL check( nf90_open(TRIM(filename), nf90_nowrite, ncid) )
@@ -528,12 +530,14 @@ PROGRAM clmu2grid
 
       PRINT *, "    aggregating data"
       PRINT *, "    aggregating urban class data"
-!$OMP PARALLEL DO NUM_THREADS(92) &
-!$OMP PRIVATE(i,j,io,jo,uxid,m,lc,wgt,sumpct,ip)
+!!$OMP PARALLEL DO NUM_THREADS(92) &
+!!$OMP PRIVATE(i,j,io,jo,uxid,m,lc,wgt,sumpct,ip)
       DO i = 1, 1200
          DO j = 1, 1200
             ! calculate io, jo
-            io = NINT((hlats(i)+sdelta/2+ 90.)/y_delta+0.5)
+            !io = NINT((hlats(i)+sdelta/2+ 90.)/y_delta+0.5)
+            !io = nyo+1-io
+            io = NINT((90.-(hlats(i)+sdelta/2))/y_delta+0.5)
             jo = NINT((hlonw(j)+sdelta/2+180.)/x_delta+0.5)
 
             
@@ -718,22 +722,22 @@ PROGRAM clmu2grid
                   IF (uxid == 0) THEN
                      PRINT*, io, jo, modur(j,i)  
                      PRINT*,i,j     
-                     IF (io == 81  .and. jo == 498) THEN
+                     IF (io == 280 .and. jo == 498) THEN
                         uxid = 30
                      ENDIF
-                     IF (io == 176 .and. jo == 198) THEN
+                     IF (io == 185 .and. jo == 198) THEN
                         uxid = 31
                      ENDIF
-                     IF (io == 187 .and. jo == 601) THEN
+                     IF (io == 174 .and. jo == 601) THEN
                         uxid = 27
                      ENDIF
-                     IF (io == 206 .and. jo == 220) THEN
+                     IF (io == 155 .and. jo == 220) THEN
                         uxid = 31
                      ENDIF
-                     IF (io == 206 .and. jo == 221) THEN
+                     IF (io == 155 .and. jo == 221) THEN
                         uxid = 31
                      ENDIF
-                     IF (io == 274 .and. jo == 248) THEN
+                     IF (io == 87  .and. jo == 248) THEN
                         uxid = 6
                      ENDIF
                   ENDIF
@@ -818,7 +822,7 @@ PROGRAM clmu2grid
             ENDIF
          ENDDO
       ENDDO
-!$OMP END PARALLEL DO
+!!$OMP END PARALLEL DO
    ENDDO
 
    100 close(11)
@@ -966,7 +970,7 @@ PROGRAM clmu2grid
    ENDDO
 
    
-   CALL check( nf90_create(TRIM(OUT_DIR)//"scolm_urban_data_modisv2.nc", NF90_NETCDF4, ncid) )
+   CALL check( nf90_create(TRIM(OUT_DIR)//"colm_urban_data_modis_v5_"//trim(year)//".nc", NF90_NETCDF4, ncid) )
 
    CALL check( nf90_def_dim(ncid, "lat"     , nyo     , lat_dimid ) )
    CALL check( nf90_def_dim(ncid, "lon"     , nxo     , lon_dimid ) )
