@@ -60,30 +60,6 @@ Program Aggre
     nclon(i) = (i-1)*delta + nclon(1)
  ENDDO
 
-! CALL check( nf90_create(trim(outfile)//'GFCC500m_test'//trim(year)//'.nc', NF90_NETCDF4, ncid) )
- 
-! CALL check( nf90_put_att(ncid, NF90_GLOBAL, 'created by', 'Wenzong Dong Tuesday Mar 1 CST 2022') )
-
-! CALL check( nf90_def_dim(ncid, 'lat', nlat, xx) )
-! CALL check( nf90_def_dim(ncid, 'lon', nlon, yy) )
-
-! CALL check( nf90_def_var(ncid, 'lat' , NF90_FLOAT     , (/xx/), nclat_id, deflate_level=6) )
-! CALL check( nf90_put_att(ncid, nclat_id, 'standard_name', 'latitude'     ) )
-! CALL check( nf90_put_att(ncid, nclat_id, 'long_name'    , 'latitude'     ) )
-! CALL check( nf90_put_att(ncid, nclat_id, 'units'        , 'degrees_north') )
-
-! CALL check( nf90_def_var(ncid, 'lon' , NF90_FLOAT     , (/yy/), nclon_id, deflate_level=6) )
-! CALL check( nf90_put_att(ncid, nclon_id, 'standard_name', 'longitude'   ) )
-! CALL check( nf90_put_att(ncid, nclon_id, 'long_name'    , 'longitude'   ) )
-! CALL check( nf90_put_att(ncid, nclon_id, 'units'        , 'degrees_east') )
-
-! CALL check( nf90_def_var(ncid, 'PCT_Tree', NF90_FLOAT  , (/yy,xx/), tree_id, deflate_level=6) )
-! CALL check( nf90_put_att(ncid, tree_id   , 'long_name' , 'forest cover'    ) )
-! CALL check( nf90_put_att(ncid, tree_id   , 'units'     , '%'               ) )
-! CALL check( nf90_put_att(ncid, tree_id   , '_FillValue', spval             ) )
-
-! CALL check( nf90_enddef(ncid) )
-
  OPEN(11, file=trim(infile)//trim(year))
 
  DO WHILE(.true.)
@@ -155,19 +131,19 @@ Program Aggre
     ENDDO
  ENDDO 
 
- CALL check( nf90_create(trim(outfile)//'GFCC500mtest'//trim(year)//'.nc', NF90_NETCDF4, ncid) )
+ CALL check( nf90_create(trim(outfile)//'GFCC500m_'//trim(year)//'.nc', NF90_NETCDF4, ncid) )
 
  CALL check( nf90_put_att(ncid, NF90_GLOBAL, 'created by', 'Wenzong Dong Tuesday Mar 1 CST 2022') )
 
  CALL check( nf90_def_dim(ncid, 'lat', nlat, xx) )
  CALL check( nf90_def_dim(ncid, 'lon', nlon, yy) )
 
- CALL check( nf90_def_var(ncid, 'lat' , NF90_FLOAT     , (/xx/), nclat_id, deflate_level=6) )
+ CALL check( nf90_def_var(ncid, 'lat'   , NF90_DOUBLE    , (/xx/), nclat_id, deflate_level=6) )
  CALL check( nf90_put_att(ncid, nclat_id, 'standard_name', 'latitude'     ) )
  CALL check( nf90_put_att(ncid, nclat_id, 'long_name'    , 'latitude'     ) )
  CALL check( nf90_put_att(ncid, nclat_id, 'units'        , 'degrees_north') )
 
- CALL check( nf90_def_var(ncid, 'lon' , NF90_FLOAT     , (/yy/), nclon_id, deflate_level=6) )
+ CALL check( nf90_def_var(ncid, 'lon'   , NF90_DOUBLE    , (/yy/), nclon_id, deflate_level=6) )
  CALL check( nf90_put_att(ncid, nclon_id, 'standard_name', 'longitude'   ) )
  CALL check( nf90_put_att(ncid, nclon_id, 'long_name'    , 'longitude'   ) )
  CALL check( nf90_put_att(ncid, nclon_id, 'units'        , 'degrees_east') )
