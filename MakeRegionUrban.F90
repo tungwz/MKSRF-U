@@ -4,7 +4,7 @@ PROGRAM main
  
    IMPLICIT NONE
 
-   CHARACTER(len=256), parameter :: dir_rawdata = '/hard/dongwz/github/CLMUgrid/v4/srf_5x5/'
+   CHARACTER(len=256), parameter :: dir_rawdata = '/hard/dongwz/CoLM-U/srfu_5x5/'
    CHARACTER(len=256), parameter :: dir_model_landdata = './'
 
    INTEGER, parameter :: r8 = selected_real_kind(12)
@@ -12,8 +12,8 @@ PROGRAM main
    INTEGER, parameter :: lon_points = 600
 
    REAL(r8), parameter :: edgen = 0! 23.1
-   REAL(r8), parameter :: edgee = 105!113.3
-   REAL(r8), parameter :: edges = -5! 23.1
+   REAL(r8), parameter :: edgee = 110!113.3
+   REAL(r8), parameter :: edges = -10! 23.1
    REAL(r8), parameter :: edgew = 100!113.3
 
    !CALL MakeRegionSurface ( dir_rawdata,dir_model_landdata, &
@@ -64,18 +64,11 @@ PROGRAM main
    REAL(r8), ALLOCATABLE, DIMENSION(:)   :: hlon
    REAL(r8), ALLOCATABLE, DIMENSION(:)   :: hlonw
    REAL(r8), ALLOCATABLE, DIMENSION(:)   :: hlone
-   ! REAL(r8), ALLOCATABLE, DIMENSION(:)   :: urlat
-   ! REAL(r8), ALLOCATABLE, DIMENSION(:)   :: urlats
-   ! REAL(r8), ALLOCATABLE, DIMENSION(:)   :: urlatn
-   ! REAL(r8), ALLOCATABLE, DIMENSION(:)   :: urlon
-   ! REAL(r8), ALLOCATABLE, DIMENSION(:)   :: urlonw
-   ! REAL(r8), ALLOCATABLE, DIMENSION(:)   :: urlone
    REAL(r8), ALLOCATABLE, DIMENSION(:,:) :: gfcc_tc
    REAL(r8), ALLOCATABLE, DIMENSION(:,:) :: gedi_th, ngedi_th
    REAL(r8), ALLOCATABLE, DIMENSION(:,:) :: modur, nmodur
    REAL(r8), ALLOCATABLE, DIMENSION(:,:) :: gl30_wt
    REAL(r8), ALLOCATABLE, DIMENSION(:,:) :: harea
-   !REAL(r8), ALLOCATABLE, DIMENSION(:,:) :: harea
 
    INTEGER , ALLOCATABLE, DIMENSION(:,:) :: urrgid
    INTEGER , ALLOCATABLE, DIMENSION(:,:) :: urden
@@ -85,65 +78,61 @@ PROGRAM main
    REAL(r8), ALLOCATABLE, DIMENSION(:,:)     :: pct_urban
    REAL(r8), ALLOCATABLE, DIMENSION(:,:,:)   :: pct_pft, ppft
    REAL(r8), ALLOCATABLE, DIMENSION(:,:,:)   :: htop_pft
-   ! REAL(r8), ALLOCATABLE, DIMENSION(:,:,:)   :: nhtop_pft
    REAL(r8), ALLOCATABLE, DIMENSION(:,:,:,:) :: lai_pft, pftlai
-   ! REAL(r8), ALLOCATABLE, DIMENSION(:,:,:,:) :: nlai_pft
    REAL(r8), ALLOCATABLE, DIMENSION(:,:,:,:) :: sai_pft, pftsai
-   ! REAL(r8), ALLOCATABLE, DIMENSION(:,:,:,:) :: nsai_pft
 
    REAL(r8), DIMENSION(den_clss,rid)      :: hwrcan, wtrf, wtrd, emrf, emwl
    REAL(r8), DIMENSION(den_clss,rid)      :: emimrd, emperd, htrf, whc, ulevimrd
    REAL(r8), DIMENSION(den_clss,rid)      :: thrf, thwl, tbmin, tbmax
 
-   REAL(r8), DIMENSION(den_clss,rid,ulev ):: cvrf, cvwl, cvimrd, &
+   REAL(r8), DIMENSION(den_clss,rid,ulev ) :: cvrf, cvwl, cvimrd, &
                                                 tkrf, tkwl, tkimrd
-   REAL(r8), DIMENSION(den_clss,rid,nr,ns):: albrf, albwl, albimrd, albperd
+   REAL(r8), DIMENSION(den_clss,rid,nr,ns) :: albrf, albwl, albimrd, albperd
    ! output variables
    INTEGER , ALLOCATABLE, DIMENSION(:,:)   :: ur_clss
    INTEGER , ALLOCATABLE, DIMENSION(:,:)   :: ur_rgid
 
-   REAL(r8), ALLOCATABLE, DIMENSION(:)     :: latso, flatso
+   REAL(r8), ALLOCATABLE, DIMENSION(:)     :: latso
    REAL(r8), ALLOCATABLE, DIMENSION(:)     :: lonso
    REAL(r8), ALLOCATABLE, DIMENSION(:,:)   :: area, pct_land
-   REAL(r8), ALLOCATABLE, DIMENSION(:,:)   :: lurrgid
    REAL(r8), ALLOCATABLE, DIMENSION(:,:,:) :: wgt_top
    REAL(r8), ALLOCATABLE, DIMENSION(:,:,:) :: tc
    REAL(r8), ALLOCATABLE, DIMENSION(:,:,:) :: urwt
    REAL(r8), ALLOCATABLE, DIMENSION(:,:,:) :: htop
-   REAL(r8), ALLOCATABLE, DIMENSION(:,:,:) :: pct_tc, fpct_tc
-   REAL(r8), ALLOCATABLE, DIMENSION(:,:,:) :: pct_urwt, fpct_urwt
-   REAL(r8), ALLOCATABLE, DIMENSION(:,:,:) :: htop_ur, fhtop_ur
-   REAL(r8), ALLOCATABLE, DIMENSION(:,:,:) :: hwr_can, fhwr_can
-   REAL(r8), ALLOCATABLE, DIMENSION(:,:,:) :: wt_rf, fwt_rf
-   REAL(r8), ALLOCATABLE, DIMENSION(:,:,:) :: wt_rd, fwt_rd
-   REAL(r8), ALLOCATABLE, DIMENSION(:,:,:) :: em_rf, fem_rf
-   REAL(r8), ALLOCATABLE, DIMENSION(:,:,:) :: em_wl, fem_wl
-   REAL(r8), ALLOCATABLE, DIMENSION(:,:,:) :: em_imrd, fem_imrd
-   REAL(r8), ALLOCATABLE, DIMENSION(:,:,:) :: em_perd, fem_perd
-   REAL(r8), ALLOCATABLE, DIMENSION(:,:,:) :: ht_rf, fht_rf
+   REAL(r8), ALLOCATABLE, DIMENSION(:,:,:) :: pct_tc
+   REAL(r8), ALLOCATABLE, DIMENSION(:,:,:) :: pct_urwt
+   REAL(r8), ALLOCATABLE, DIMENSION(:,:,:) :: htop_ur
+   REAL(r8), ALLOCATABLE, DIMENSION(:,:,:) :: hwr_can
+   REAL(r8), ALLOCATABLE, DIMENSION(:,:,:) :: wt_rf
+   REAL(r8), ALLOCATABLE, DIMENSION(:,:,:) :: wt_rd
+   REAL(r8), ALLOCATABLE, DIMENSION(:,:,:) :: em_rf
+   REAL(r8), ALLOCATABLE, DIMENSION(:,:,:) :: em_wl
+   REAL(r8), ALLOCATABLE, DIMENSION(:,:,:) :: em_imrd
+   REAL(r8), ALLOCATABLE, DIMENSION(:,:,:) :: em_perd
+   REAL(r8), ALLOCATABLE, DIMENSION(:,:,:) :: ht_rf
    REAL(r8), ALLOCATABLE, DIMENSION(:,:,:) :: w_hc
    REAL(r8), ALLOCATABLE, DIMENSION(:,:,:) :: ulev_imrd
-   REAL(r8), ALLOCATABLE, DIMENSION(:,:,:) :: th_rf, fth_rf
-   REAL(r8), ALLOCATABLE, DIMENSION(:,:,:) :: th_wl, fth_wl
-   REAL(r8), ALLOCATABLE, DIMENSION(:,:,:) :: tb_min, ftb_min
-   REAL(r8), ALLOCATABLE, DIMENSION(:,:,:) :: tb_max, ftb_max
+   REAL(r8), ALLOCATABLE, DIMENSION(:,:,:) :: th_rf
+   REAL(r8), ALLOCATABLE, DIMENSION(:,:,:) :: th_wl
+   REAL(r8), ALLOCATABLE, DIMENSION(:,:,:) :: tb_min
+   REAL(r8), ALLOCATABLE, DIMENSION(:,:,:) :: tb_max
 
    REAL(r8), ALLOCATABLE, DIMENSION(:,:)     :: hgt, avg
    REAL(r8), ALLOCATABLE, DIMENSION(:,:,:)   :: ur_dc
-   REAL(r8), ALLOCATABLE, DIMENSION(:,:,:)   :: pct_ur, fpct_ur
-   REAL(r8), ALLOCATABLE, DIMENSION(:,:,:,:) :: ur_lai, fur_lai
-   REAL(r8), ALLOCATABLE, DIMENSION(:,:,:,:) :: ur_sai, fur_sai
-   REAL(r8), ALLOCATABLE, DIMENSION(:,:,:,:) :: cv_rf, fcv_rf
-   REAL(r8), ALLOCATABLE, DIMENSION(:,:,:,:) :: cv_wl, fcv_wl
-   REAL(r8), ALLOCATABLE, DIMENSION(:,:,:,:) :: cv_imrd, fcv_imrd
-   REAL(r8), ALLOCATABLE, DIMENSION(:,:,:,:) :: tk_rf, ftk_rf
-   REAL(r8), ALLOCATABLE, DIMENSION(:,:,:,:) :: tk_wl, ftk_wl
-   REAL(r8), ALLOCATABLE, DIMENSION(:,:,:,:) :: tk_imrd, ftk_imrd
+   REAL(r8), ALLOCATABLE, DIMENSION(:,:,:)   :: pct_ur
+   REAL(r8), ALLOCATABLE, DIMENSION(:,:,:,:) :: ur_lai
+   REAL(r8), ALLOCATABLE, DIMENSION(:,:,:,:) :: ur_sai
+   REAL(r8), ALLOCATABLE, DIMENSION(:,:,:,:) :: cv_rf
+   REAL(r8), ALLOCATABLE, DIMENSION(:,:,:,:) :: cv_wl
+   REAL(r8), ALLOCATABLE, DIMENSION(:,:,:,:) :: cv_imrd
+   REAL(r8), ALLOCATABLE, DIMENSION(:,:,:,:) :: tk_rf
+   REAL(r8), ALLOCATABLE, DIMENSION(:,:,:,:) :: tk_wl
+   REAL(r8), ALLOCATABLE, DIMENSION(:,:,:,:) :: tk_imrd
 
-   REAL(r8), ALLOCATABLE, DIMENSION(:,:,:,:,:) :: alb_rf, falb_rf
-   REAL(r8), ALLOCATABLE, DIMENSION(:,:,:,:,:) :: alb_wl, falb_wl
-   REAL(r8), ALLOCATABLE, DIMENSION(:,:,:,:,:) :: alb_imrd, falb_imrd
-   REAL(r8), ALLOCATABLE, DIMENSION(:,:,:,:,:) :: alb_perd, falb_perd
+   REAL(r8), ALLOCATABLE, DIMENSION(:,:,:,:,:) :: alb_rf
+   REAL(r8), ALLOCATABLE, DIMENSION(:,:,:,:,:) :: alb_wl
+   REAL(r8), ALLOCATABLE, DIMENSION(:,:,:,:,:) :: alb_imrd
+   REAL(r8), ALLOCATABLE, DIMENSION(:,:,:,:,:) :: alb_perd
 
    ! variable ids
    INTEGER :: ncid, uhd_vid, umd_vid, utbd_vid, htop_urvid
@@ -162,8 +151,8 @@ PROGRAM main
    INTEGER :: uxid, uyid, upftvid, mon_dimid, den_dimid
    INTEGER :: den_vid, mon_vid, ur_landvid, saivid, ur_saivid, ur_denvid
 
-   CHARACTER(len=255) :: SRF_DIR='/hard/dongwz/github/MKSRF-U/srf_5x5/'
-   CHARACTER(len=255) :: RAW_DIR='/hard/dongwz/modis/mksrf/srf_5x5/'
+   CHARACTER(len=255) :: SRF_DIR='/hard/dongwz/CoLM-U/srfu_5x5/'
+   CHARACTER(len=255) :: RAW_DIR='/tera02/yuanhua/mksrf/srf_5x5/'
    CHARACTER(len=255) :: OUT_DIR='./'
    CHARACTER(len=255) :: REGFILE='reg_5x5'
    CHARACTER(len=255) :: FILE_NAME, reg1, reg2, reg3, reg4
@@ -174,7 +163,7 @@ PROGRAM main
    REAL(r8) :: lone1(lon_points), lonw1(lon_points), latn1(lat_points), lats1(lon_points)
    
    INTEGER(kind=2):: lc
-   INTEGER  :: eei, eej, ssi, ssj, ei, ej, si, sj
+   INTEGER  :: eei, eej, ssi, ssj, ei, ej, si, sj, nxo, nyo
    INTEGER  :: i, j, k, io, jo, m, n, ii, jj, ir, jr, cont, sumth, p, ip
    INTEGER  :: argn
    INTEGER  :: n_ns(2), n_nr(2), n_den(3), n_ulev(10), n_mon(12), reg(4)
@@ -198,12 +187,6 @@ PROGRAM main
    ALLOCATE( hlon  (nxy) )
    ALLOCATE( hlonw (nxy) )
    ALLOCATE( hlone (nxy) )
-   ! ALLOCATE( urlat (hxy) )
-   ! ALLOCATE( urlats(hxy) )
-   ! ALLOCATE( urlatn(hxy) )
-   ! ALLOCATE( urlon (hxy) )
-   ! ALLOCATE( urlonw(hxy) )
-   ! ALLOCATE( urlone(hxy) )
 
    ALLOCATE( harea   (nxy, nxy) )
    ALLOCATE( gfcc_tc (nxy, nxy) )
@@ -215,7 +198,6 @@ PROGRAM main
    ALLOCATE( pglacier(nxy, nxy) )
    ALLOCATE( gl30_wt (nxy, nxy) )
    ALLOCATE( modur   (nxy, nxy) )
-   !ALLOCATE( harea   (hxy, hxy) )
    ALLOCATE( urrgid  (nxy, nxy) )
    ALLOCATE( urden   (nxy, nxy) )
    ALLOCATE( ppft    (nxy, nxy, npft) )
@@ -224,7 +206,7 @@ PROGRAM main
 
    ALLOCATE( latso     (lat_points) )
    ALLOCATE( lonso     (lon_points) )
-   ALLOCATE( lurrgid   (lon_points, lat_points) )
+   !ALLOCATE( lurrgid   (lon_points, lat_points) )
    ALLOCATE( ur_clss   (lon_points, lat_points) )
    ALLOCATE( ur_rgid   (lon_points, lat_points) )
    ALLOCATE( area      (lon_points, lat_points) )
@@ -232,15 +214,10 @@ PROGRAM main
    ALLOCATE( avg       (lon_points, lat_points) )
    ALLOCATE( pct_urban (lon_points, lat_points) )
    ALLOCATE( pct_land  (lon_points, lat_points) )
-   ! ALLOCATE( npct_urban(lon_points, lat_points) )
    ALLOCATE( htop_pft  (lon_points, lat_points, npft     ) )
-   ! ALLOCATE( nhtop_pft (lon_points, lat_points, npft     ) )
    ALLOCATE( pct_pft   (lon_points, lat_points, npft     ) )
-   ! ALLOCATE( npct_pft  (lon_points, lat_points, npft     ) )
    ALLOCATE( lai_pft   (lon_points, lat_points, npft, mon) )
-   ! ALLOCATE( nlai_pft  (lon_points, lat_points, npft, mon) )
    ALLOCATE( sai_pft   (lon_points, lat_points, npft, mon) )
-   ! ALLOCATE( nsai_pft  (lon_points, lat_points, npft, mon) )
    ALLOCATE( ur_dc     (lon_points, lat_points, den_clss ) )
    ALLOCATE( pct_ur    (lon_points, lat_points, den_clss ) )
    ALLOCATE( wgt_top   (lon_points, lat_points, den_clss ) )
@@ -276,36 +253,6 @@ PROGRAM main
    ALLOCATE( alb_wl    (lon_points, lat_points, den_clss, nr, ns) )
    ALLOCATE( alb_imrd  (lon_points, lat_points, den_clss, nr, ns) )
    ALLOCATE( alb_perd  (lon_points, lat_points, den_clss, nr, ns) )
-
-   ! ALLOCATE( flatso    (lat_points) )
-   ! ALLOCATE( fpct_tc   (lon_points, lat_points, den_clss) )
-   ! ALLOCATE( fpct_urwt (lon_points, lat_points, den_clss) )
-   ! ALLOCATE( fhtop_ur  (lon_points, lat_points, den_clss) )
-   ! ALLOCATE( fpct_ur   (lon_points, lat_points, den_clss) )
-   ! ALLOCATE( fhwr_can  (lon_points, lat_points, den_clss) )
-   ! ALLOCATE( fwt_rf    (lon_points, lat_points, den_clss) )
-   ! ALLOCATE( fwt_rd    (lon_points, lat_points, den_clss) )
-   ! ALLOCATE( fem_rf    (lon_points, lat_points, den_clss) )
-   ! ALLOCATE( fem_wl    (lon_points, lat_points, den_clss) )
-   ! ALLOCATE( fem_imrd  (lon_points, lat_points, den_clss) )
-   ! ALLOCATE( fem_perd  (lon_points, lat_points, den_clss) )
-   ! ALLOCATE( fht_rf    (lon_points, lat_points, den_clss) )
-   ! ALLOCATE( fth_rf    (lon_points, lat_points, den_clss) )
-   ! ALLOCATE( fth_wl    (lon_points, lat_points, den_clss) )
-   ! ALLOCATE( ftb_min   (lon_points, lat_points, den_clss) )
-   ! ALLOCATE( ftb_max   (lon_points, lat_points, den_clss) )
-   ! ALLOCATE( fur_sai   (lon_points, lat_points, den_clss, mon ) )
-   ! ALLOCATE( fur_lai   (lon_points, lat_points, den_clss, mon ) )
-   ! ALLOCATE( fcv_rf    (lon_points, lat_points, den_clss, ulev) )
-   ! ALLOCATE( fcv_wl    (lon_points, lat_points, den_clss, ulev) )
-   ! ALLOCATE( fcv_imrd  (lon_points, lat_points, den_clss, ulev) )
-   ! ALLOCATE( ftk_rf    (lon_points, lat_points, den_clss, ulev) )
-   ! ALLOCATE( ftk_wl    (lon_points, lat_points, den_clss, ulev) )
-   ! ALLOCATE( ftk_imrd  (lon_points, lat_points, den_clss, ulev) )
-   ! ALLOCATE( falb_rf   (lon_points, lat_points, den_clss, nr, ns) )
-   ! ALLOCATE( falb_wl   (lon_points, lat_points, den_clss, nr, ns) )
-   ! ALLOCATE( falb_imrd (lon_points, lat_points, den_clss, nr, ns) )
-   ! ALLOCATE( falb_perd (lon_points, lat_points, den_clss, nr, ns) )
 
     ! initialization
    fac      (:)     = 0.
@@ -348,41 +295,6 @@ PROGRAM main
    alb_wl   (:,:,:,:,:) = 0.
    alb_imrd (:,:,:,:,:) = 0.
    alb_perd (:,:,:,:,:) = 0.
-
-   ! fpct_tc   (:,:,:) = 0.
-   ! fpct_ur   (:,:,:) = 0.
-   ! fhtop_ur  (:,:,:) = 0.
-   ! fpct_urwt (:,:,:) = 0.
-   ! fhwr_can  (:,:,:) = 0.
-   ! fwt_rf    (:,:,:) = 0.
-   ! fwt_rd    (:,:,:) = 0.
-   ! fem_rf    (:,:,:) = 0.
-   ! fem_wl    (:,:,:) = 0.
-   ! fem_imrd  (:,:,:) = 0.
-   ! fem_perd  (:,:,:) = 0.
-   ! fht_rf    (:,:,:) = 0.
-   ! fth_rf    (:,:,:) = 0.
-   ! fth_wl    (:,:,:) = 0.
-   ! ftb_min   (:,:,:) = 0.
-   ! ftb_max   (:,:,:) = 0.
-
-   ! fur_lai   (:,:,:,:) = 0.
-   ! fur_sai   (:,:,:,:) = 0.
-   ! ftk_rf    (:,:,:,:) = 0.
-   ! ftk_wl    (:,:,:,:) = 0.
-   ! ftk_imrd  (:,:,:,:) = 0.
-   ! fcv_rf    (:,:,:,:) = 0.
-   ! fcv_wl    (:,:,:,:) = 0.
-   ! fcv_imrd  (:,:,:,:) = 0.
-
-   ! falb_rf   (:,:,:,:,:) = 0.
-   ! falb_wl   (:,:,:,:,:) = 0.
-   ! falb_imrd (:,:,:,:,:) = 0.
-   ! falb_perd (:,:,:,:,:) = 0.
-
-   ! fpct_tc   (:,:,:) = 0.
-   ! fpct_urwt (:,:,:) = 0.
-   ! fhtop_ur  (:,:,:) = 0.
 
    ur_rgid (:,:) = 0.
    ur_clss (:,:) = 0.
@@ -520,7 +432,7 @@ PROGRAM main
             //trim(adjustL(reg2))//'_' &
             //trim(adjustL(reg3))//'_' &
             //trim(adjustL(reg4))//'.' &
-            //'SRF.nc'!//trim(year)//'.nc'
+            //'SRF'//trim(year)//'.nc'
 
          print *,">>> Processing file ", trim(FILE_NAME), "..."
          inquire (file=FILE_NAME, exist=fileExists)
@@ -547,19 +459,15 @@ PROGRAM main
          CALL check( nf90_close(ncid) )
 
          ! read NCAR 1km urban class and region id
-         PRINT *, "    reading 1km urban class data"
+         PRINT *, "    reading 500m urban class data"
          FILE_NAME = TRIM(SRF_DIR)//'RG_'//TRIM(adjustL(reg1))//'_'//&
                      TRIM(adjustL(reg2))//'_'//TRIM(adjustL(reg3))//'_'//TRIM(adjustL(reg4))//'.NCAR.nc'
 
          CALL check( nf90_open(FILE_NAME, nf90_nowrite, ncid) )
 
-         ! CALL check( nf90_inq_varid(ncid, "lat"                , urlat_vid ) )
-         ! CALL check( nf90_inq_varid(ncid, "lon"                , urlon_vid ) )
          CALL check( nf90_inq_varid(ncid, "URBAN_DENSITY_CLASS", ur_clssvid) )
          CALL check( nf90_inq_varid(ncid, "REGION_ID"          , ur_rgvid  ) )
 
-         ! CALL check( nf90_get_var(ncid, urlat_vid   , urlat ) )
-         ! CALL check( nf90_get_var(ncid, urlon_vid   , urlon ) )
          CALL check( nf90_get_var(ncid, ur_clssvid  , urden ) )
          CALL check( nf90_get_var(ncid, ur_rgvid    , urrgid) )
 
@@ -601,13 +509,6 @@ PROGRAM main
 
          CALL check( nf90_close(ncid) )
 
-         ! DO i = 1, 1200
-         !    k = 1200 - i + 1
-         !    !pct_urban(j,i)     = npct_urban(j,k)
-         !    modur  (:,i) = nmodur  (:,k)
-         !    gedi_th(:,i) = ngedi_th(:,k)
-         ! ENDDO
-
          ! calculate the edge of small grids
          DO i = 1, nxy
             hlonw(i) = reg(2) + i*dll - dll
@@ -622,20 +523,6 @@ PROGRAM main
             dy = sin(hlatn(i)*deg2rad) - sin(hlats(i)*deg2rad)
             harea(:,i) = dx*dy*re*re
          ENDDO
-
-         ! DO i = 1, hxy
-         !    urlonw(i) = reg(2) + i*dll - dll
-         !    urlone(i) = reg(2) + i*dll
-         !    urlatn(i) = reg(1) - i*dll + dll
-         !    urlats(i) = reg(1) - i*dll
-         ! ENDDO
-
-         ! calculate the area size of small grids
-         ! DO i = 1, hxy
-         !    dx = (urlone(1)-urlonw(1))*deg2rad
-         !    dy = sin(urlatn(i)*deg2rad) - sin(urlats(i)*deg2rad)
-         !    harea(:,i) = dx*dy*re*re
-         ! ENDDO
 
          ! default value
          si = 1; ei = nxy
@@ -844,30 +731,11 @@ PROGRAM main
                   ur_dc(jo,io,3) = ur_dc(jo,io,3) + harea(j,i)*modur(j,i)/100
                   uxid           = urrgid(j,i)
                   ! 部分格点MODIS与NCAR不一致(NCAR没有城市ID)，因此通过距离MODIS格点最近的NCAR城市ID赋值
-                  IF (uxid == 0) THEN
-                     uxid = lurrgid(jo,io)
-                     IF (uxid == 0) THEN
-                        PRINT*, io, jo, modur(j,i)
-                        PRINT*,i,j
-                        IF (io == 81  .and. jo == 498) THEN
-                           uxid = 30
-                        ENDIF
-                        IF (io == 176 .and. jo == 198) THEN
-                           uxid = 31
-                        ENDIF
-                        IF (io == 187 .and. jo == 601) THEN
-                           uxid = 27
-                        ENDIF
-                        IF (io == 206 .and. jo == 220) THEN
-                           uxid = 31
-                        ENDIF
-                        IF (io == 206 .and. jo == 221) THEN
-                           uxid = 31
-                        ENDIF
-                        IF (io == 274 .and. jo == 248) THEN
-                           uxid = 6
-                        ENDIF
-                     ENDIF
+                  ! 目前看来，这些情况仅仅出现在0.5°数据生成过程中，高分辨率区域数据还没有遇到(待测试)
+                  IF (reg(1)==-45 .and. reg(3)==-50 .and. reg(2)==65 .and. reg(4)==70) THEN
+                     !nyo = NINT((90. -nlat)/0.5+0.5)
+                     !nxo = NINT((nlon+180.)/0.5+0.5)
+                     uxid = 31
                   ENDIF
 
                   ! 城市建筑属性聚合
@@ -908,7 +776,7 @@ PROGRAM main
 
                ! total area include ocean
                area(jo,io) = area(jo,io) + harea(j,i)
-
+               ! https://github.com/sunan126/MKSRF.git MakeGlobalSurface.F90
                lc = lcdata(j,i)
                IF (lc /= 0) THEN
 
@@ -1010,6 +878,19 @@ PROGRAM main
             pct_ur(j,i,3) = ur_dc(j,i,3) / sumur * 100.
          ENDIF
 
+         DO ip = 1, npft
+            IF (pct_pft(j,i,ip) > 0) THEN
+                lai_pft(j,i,ip,:) =  lai_pft(j,i,ip,:)/pct_pft(j,i,ip)
+                sai_pft(j,i,ip,:) =  sai_pft(j,i,ip,:)/pct_pft(j,i,ip)
+               htop_pft(j,i,ip)   = htop_pft(j,i,ip)  /pct_pft(j,i,ip)
+            ENDIF
+         ENDDO
+
+         IF (pct_land(j,i) > 0) THEN
+            ! PFT level
+            pct_pft    (j,i,:) = pct_pft(j,i,:) / pct_land(j,i) * 100.
+         ENDIF
+
          ! 检查3类城市是否超过100%
          IF (sum(pct_ur(j,i,1:3)) > 1e-6 .and. abs(sum(pct_ur(j,i,1:3))-100) > 1e-3) THEN
             PRINT *, 'urban_pct > 100'
@@ -1059,57 +940,20 @@ PROGRAM main
 
                wgt = pct_pft(j,i,m)/sum(pct_pft(j,i,2:9))
                DO k = 1, 12
-                  ur_lai (j,i,1,k) = ur_lai(j,i,1,k)+wgt*lai_pft(j,i,m,k)*min(1.5,fac(1))
-                  ur_lai (j,i,2,k) = ur_lai(j,i,2,k)+wgt*lai_pft(j,i,m,k)*min(1.5,fac(2))
-                  ur_lai (j,i,3,k) = ur_lai(j,i,3,k)+wgt*lai_pft(j,i,m,k)*min(1.5,fac(3))
-                  ur_sai (j,i,1,k) = ur_sai(j,i,1,k)+wgt*sai_pft(j,i,m,k)*min(1.5,fac(1))
-                  ur_sai (j,i,2,k) = ur_sai(j,i,2,k)+wgt*sai_pft(j,i,m,k)*min(1.5,fac(2))
-                  ur_sai (j,i,3,k) = ur_sai(j,i,3,k)+wgt*sai_pft(j,i,m,k)*min(1.5,fac(3))
+                  ur_lai (j,i,1,k) = ur_lai(j,i,1,k)+wgt*lai_pft(j,i,m,k)*min(1.,fac(1))
+                  ur_lai (j,i,2,k) = ur_lai(j,i,2,k)+wgt*lai_pft(j,i,m,k)*min(1.,fac(2))
+                  ur_lai (j,i,3,k) = ur_lai(j,i,3,k)+wgt*lai_pft(j,i,m,k)*min(1.,fac(3))
+                  IF (ur_lai(j,i,1,k)>15 .or. ur_lai(j,i,2,k)>15 .or. ur_lai(j,i,3,k)>15) THEN
+                     print*, j,i,k
+                  ENDIF
+                  ur_sai (j,i,1,k) = ur_sai(j,i,1,k)+wgt*sai_pft(j,i,m,k)*min(1.,fac(1))
+                  ur_sai (j,i,2,k) = ur_sai(j,i,2,k)+wgt*sai_pft(j,i,m,k)*min(1.,fac(2))
+                  ur_sai (j,i,3,k) = ur_sai(j,i,3,k)+wgt*sai_pft(j,i,m,k)*min(1.,fac(3))
                ENDDO
             ENDIF
          ENDDO
       ENDDO
    ENDDO
-
-   ! data flip lat(0)=-90 -> lat(0)=90
-   ! DO i = 1, lat_points
-   !    DO j = 1, lon_points
-   !       k = lat_points - i + 1
-
-   !       flatso (i)     = latso(k)
-
-   !       fpct_ur  (j,i,:) = pct_ur  (j,k,:)
-   !       fpct_tc  (j,i,:) = pct_tc  (j,k,:)
-   !       fpct_urwt(j,i,:) = pct_urwt(j,k,:)
-   !       fhtop_ur (j,i,:) = htop_ur (j,k,:)
-   !       fhwr_can (j,i,:) = hwr_can (j,k,:)
-   !       fwt_rf   (j,i,:) = wt_rf   (j,k,:)
-   !       fwt_rd   (j,i,:) = wt_rd   (j,k,:)
-   !       fem_rf   (j,i,:) = em_rf   (j,k,:)
-   !       fem_wl   (j,i,:) = em_wl   (j,k,:)
-   !       fem_imrd (j,i,:) = em_imrd (j,k,:)
-   !       fem_perd (j,i,:) = em_perd (j,k,:)
-   !       fht_rf   (j,i,:) = ht_rf   (j,k,:)
-   !       fth_rf   (j,i,:) = th_rf   (j,k,:)
-   !       fth_wl   (j,i,:) = th_wl   (j,k,:)
-   !       ftb_min  (j,i,:) = tb_min  (j,k,:)
-   !       ftb_max  (j,i,:) = tb_max  (j,k,:)
-
-   !       fur_lai  (j,i,:,:) = ur_lai (j,k,:,:)
-   !       fur_sai  (j,i,:,:) = ur_sai (j,k,:,:)
-   !       ftk_rf   (j,i,:,:) = tk_rf  (j,k,:,:)
-   !       ftk_wl   (j,i,:,:) = tk_wl  (j,k,:,:)
-   !       ftk_imrd (j,i,:,:) = tk_imrd(j,k,:,:)
-   !       fcv_rf   (j,i,:,:) = cv_rf  (j,k,:,:)
-   !       fcv_wl   (j,i,:,:) = cv_wl  (j,k,:,:)
-   !       fcv_imrd (j,i,:,:) = cv_imrd(j,k,:,:)
-
-   !       falb_rf  (j,i,:,:,:) = alb_rf  (j,k,:,:,:)
-   !       falb_wl  (j,i,:,:,:) = alb_wl  (j,k,:,:,:)
-   !       falb_imrd(j,i,:,:,:) = alb_imrd(j,k,:,:,:)
-   !       falb_perd(j,i,:,:,:) = alb_perd(j,k,:,:,:)
-   !    ENDDO
-   ! ENDDO
 
    PRINT *, "*****************************************"
 
@@ -1134,7 +978,7 @@ PROGRAM main
    ENDDO
 
 
-   CALL check( nf90_create(TRIM(OUT_DIR)//"scolm_urban_data_modis.nc", NF90_NETCDF4, ncid) )
+   CALL check( nf90_create(TRIM(OUT_DIR)//"RG_urban_data_modis.nc", NF90_NETCDF4, ncid) )
 
    CALL check( nf90_def_dim(ncid, "lat"     , lat_points, lat_dimid ) )
    CALL check( nf90_def_dim(ncid, "lon"     , lon_points, lon_dimid ) )
@@ -1379,9 +1223,6 @@ PROGRAM main
    CALL check( nf90_inq_varid(ncid, "HT_ROOF"        , ht_rfvid   ) )
    CALL check( nf90_put_var  (ncid, ht_rfvid         , ht_rf      ) )
 
-   !CALL check( nf90_inq_varid(ncid, "WIND_HGT_CANYON",whcvid   ) )
-   !CALL check( nf90_put_var(ncid,whcvid,w_hc                   ) )
-
    CALL check( nf90_inq_varid(ncid, "THICK_ROOF"     , th_rfvid   ) )
    CALL check( nf90_put_var  (ncid, th_rfvid         , th_rf      ) )
 
@@ -1437,31 +1278,20 @@ PROGRAM main
    DEALLOCATE( hlon    )
    DEALLOCATE( hlonw   )
    DEALLOCATE( hlone   )
-   ! DEALLOCATE( urlat   )
-   ! DEALLOCATE( urlats  )
-   ! DEALLOCATE( urlatn  )
-   ! DEALLOCATE( urlon   )
-   ! DEALLOCATE( urlonw  )
-   ! DEALLOCATE( urlone  )
    DEALLOCATE( gfcc_tc )
    DEALLOCATE( gedi_th )
    DEALLOCATE( gl30_wt )
 
    DEALLOCATE( harea   )
-   DEALLOCATE( lurrgid )
    DEALLOCATE( urrgid  )
 
    DEALLOCATE( latso     )
    DEALLOCATE( lonso     )
    DEALLOCATE( area      )
    DEALLOCATE( pct_urban )
-   ! DEALLOCATE( npct_urban)
    DEALLOCATE( htop_pft  )
-   ! DEALLOCATE( nhtop_pft )
    DEALLOCATE( pct_pft   )
-   ! DEALLOCATE( npct_pft  )
    DEALLOCATE( lai_pft   )
-   ! DEALLOCATE( nlai_pft  )
    DEALLOCATE( ur_dc     )
    DEALLOCATE( pct_ur    )
 
