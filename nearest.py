@@ -44,7 +44,7 @@ def create_nc(rid,uid,lat,lon,filename):
     r_id[:,:] = rid
     u_id[:,:] = uid
 
-def local_process_unit(ncarfile, modfile,cnt):
+def local_process_unit(ncarfile, modfile):
     
     nc1 = xr.open_dataset('./NCAR/'+ncarfile)
     nc2 = xr.open_dataset('./MOD/'+modfile)
@@ -57,26 +57,29 @@ def local_process_unit(ncarfile, modfile,cnt):
     lc  = np.array(nc2['LC'])
 
     #print(rid)
+    # this error only occur in region lat -45~-50 lon 65-70,
+    # 因为这个地区NCAR认为全部是海洋，而MODIS有陆地(城市)
     if ((~np.any(rid)) & np.any(mod)):
        print(np.any(rid))
        print('error')
-       cnt=cnt+1
-       return cnt
 
+    # if all grids are not 0
     if np.any(rid):
        i=np.where(~(rid==0))
        interp = NearestNDInterpolator(np.transpose(i), rid[i])
        filled_data = interp(*np.indices(rid.shape))
+       # land mask with MODIS data
        uid = np.where(lc==0,0,uid)
        filled_data = np.where(lc==0,0,filled_data)
        create_nc(filled_data,uid,lat,lon,ncarfile)
+
+# Uncomment the required lines for the multiprocess
 #ncarfile = subprocess.getoutput('ls *NCAR.nc').split()#.sort()
 #modfile  = subprocess.getoutput('ls *MOD2000.nc').split()#.sort()
 #count = 0
 ncarfile = os.listdir('./NCAR/')
 #modfile  = os.listdir('./MOD/')
 #print(ncarfile)
-cnt = 0
 for fil in ncarfile:
     #p = Process(target=local_process_unit,args=(fil,modfile[filid]))
     #p.start()
@@ -86,9 +89,8 @@ for fil in ncarfile:
     #print(os.path.splitext(fil)[0][0:l-4])
     modfile = fil[0:l-8]+'.MOD2000.nc'
     #print(modfile)
-    local_process_unit(fil, modfile,cnt)
+    local_process_unit(fil, modfile)
     #if count>49:
     #    p.join()
     #    count=0
 
-print(cnt)
