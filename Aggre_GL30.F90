@@ -47,17 +47,17 @@ Program Aggre
     CALL getarg(1, year)
  ENDIF
 
- nclat(1) = delta/2 - 90
+ nclat(1) = delta/2 - 90.
  DO i=2,nlat,1
     nclat(i) = (i-1)*delta + nclat(1)
  ENDDO
 
- nclon(1) = delta/2 - 180
+ nclon(1) = delta/2 - 180.
  DO i=2,nlon,1
     nclon(i) = (i-1)*delta + nclon(1)
  ENDDO
     
- CALL check( nf90_create(watfile//'Water500m_'//trim(year)//'.nc', NF90_NETCDF4, ncid) )
+ CALL check( nf90_create(trim(watfile)//'Water500m_'//trim(year)//'.nc', NF90_NETCDF4, ncid) )
  
  CALL check( nf90_put_att(ncid, NF90_GLOBAL, 'created by', 'Wenzong Dong Wed Mar 1 CST 2022') )
 
@@ -81,7 +81,7 @@ Program Aggre
 
  CALL check(nf90_enddef(ncid))
  
- OPEN(11, file=infile//trim(year))
+ OPEN(11, file=trim(infile)//trim(year))
 
  DO WHILE(.true.)
 
@@ -113,8 +113,6 @@ Program Aggre
  
     CALL check( nf90_close(nid) )
 
-!$OMP PARALLEL DO NUM_THREADS(92) &
-!$OMP PRIVATE(i,j,clat,clon,tlat,tlon)
     DO i=1,nxo,1
        DO j=1,nyo,1
          
@@ -139,7 +137,6 @@ Program Aggre
           ENDIF
        ENDDO
     ENDDO
-!$OMP END PARALLEL DO
 
     DEALLOCATE(lat  )
     DEALLOCATE(lon  )
