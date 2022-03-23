@@ -1,6 +1,6 @@
 # Urban data for model
-gfortran -o mkglobal -fbounds-check -fopenmp -g MakeGlobalUrban.F90 -I$Inc -L$Lib -lnetcdf -lnetcdff
-gfortran -o mkreg -fbounds-check -fopenmp -g MakeRegionUrban.F90 -I$Inc -L$Lib -lnetcdf -lnetcdff
+gfortran -o mkglobal -fbounds-check -g MakeGlobalUrban.F90 -I$Inc -L$Lib -lnetcdf -lnetcdff
+gfortran -o mkreg -fbounds-check  -g MakeRegionUrban.F90 -I$Inc -L$Lib -lnetcdf -lnetcdff
 # Aggregate 30m data to 500m
 gfortran -o mkgfcc -fbounds-check -fopenmp -g Aggre_GFCC.F90 -I$Inc -L$Lib -lnetcdf -lnetcdff
 
