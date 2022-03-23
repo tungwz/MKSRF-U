@@ -63,7 +63,6 @@ PROGRAM clmu2grid
    REAL(r8), ALLOCATABLE, DIMENSION(:)     :: latso, flatso
    REAL(r8), ALLOCATABLE, DIMENSION(:)     :: lonso
    REAL(r8), ALLOCATABLE, DIMENSION(:,:)   :: area, pct_land
-   REAL(r8), ALLOCATABLE, DIMENSION(:,:)   :: lurrgid
    REAL(r8), ALLOCATABLE, DIMENSION(:,:,:) :: wgt_top
    REAL(r8), ALLOCATABLE, DIMENSION(:,:,:) :: tc
    REAL(r8), ALLOCATABLE, DIMENSION(:,:,:) :: urwt
@@ -122,7 +121,7 @@ PROGRAM clmu2grid
    INTEGER :: den_vid, mon_vid, ur_landvid, saivid, ur_saivid, ur_denvid
 
    CHARACTER(len=255) :: SRF_DIR='/hard/dongwz/CoLM-U/srfu_5x5/'
-   CHARACTER(len=255) :: RAW_DIR='/hard/dongwz/modis/mksrf/srf_5x5/'
+   CHARACTER(len=255) :: RAW_DIR='/tera02/yuanhua/mksrf/srf_5x5/'
    CHARACTER(len=255) :: OUT_DIR='./'
    CHARACTER(len=255) :: REGFILE='reg_5x5'
    CHARACTER(len=255) :: filename
@@ -170,7 +169,6 @@ PROGRAM clmu2grid
    ALLOCATE( latso     (nyo) )
    ALLOCATE( lonso     (nxo) )
    ALLOCATE( pct_land  (nxo, nyo) )
-   ALLOCATE( lurrgid   (nxo, nyo) )
    ALLOCATE( ur_clss   (nxo, nyo) )
    ALLOCATE( ur_rgid   (nxo, nyo) )
    ALLOCATE( area      (nxo, nyo) )
@@ -346,14 +344,6 @@ PROGRAM clmu2grid
    CALL check( nf90_get_var(ncid, th_wlvid    , thwl    ) )
    CALL check( nf90_get_var(ncid, tbminvid    , tbmin   ) )
    CALL check( nf90_get_var(ncid, tbmaxvid    , tbmax   ) )
-
-   CALL check( nf90_close(ncid) )
-
-   ! 仅仅用于一些特殊格点的城市ID赋值
-   CALL check( nf90_open("urban_properties_data.5deg.nc", nf90_nowrite, ncid) )
-
-   CALL check( nf90_inq_varid(ncid, "REGION_ID", ur_rgvid) )
-   CALL check( nf90_get_var(ncid  , ur_rgvid   , lurrgid ) )
 
    CALL check( nf90_close(ncid) )
 
@@ -717,32 +707,9 @@ PROGRAM clmu2grid
                uxid           = urrgid(j,i)
                   
                ! 部分格点MODIS与NCAR不一致(NCAR没有城市ID)，因此通过距离MODIS格点最近的NCAR城市ID赋值
-               IF (uxid == 0) THEN
-                  uxid = lurrgid(jo,io)
-                  IF (uxid == 0) THEN
-                     PRINT*, io, jo, modur(j,i)  
-                     PRINT*,i,j     
-                     IF (io == 280 .and. jo == 498) THEN
-                        uxid = 30
-                     ENDIF
-                     IF (io == 185 .and. jo == 198) THEN
-                        uxid = 31
-                     ENDIF
-                     IF (io == 174 .and. jo == 601) THEN
-                        uxid = 27
-                     ENDIF
-                     IF (io == 155 .and. jo == 220) THEN
-                        uxid = 31
-                     ENDIF
-                     IF (io == 155 .and. jo == 221) THEN
-                        uxid = 31
-                     ENDIF
-                     IF (io == 87  .and. jo == 248) THEN
-                        uxid = 6
-                     ENDIF
-                  ENDIF
+               IF (reg(1)==-45 .and. reg(3)==-50 .and. reg(2)==65 .and. reg(4)==70) THEN
+                  uxid = 30
                ENDIF
-
                ! 城市建筑属性聚合
                ! 加权：
                ! 粗网格城市属性=粗网格城市属性+细网格城市属性*细网格面积*MODIS_PCT_URBAN
@@ -780,6 +747,7 @@ PROGRAM clmu2grid
             ENDIF
 
             ! MakeGlobalSurface.F90, 可改成CALL Subroutine
+            ! https://github.com/sunan126/MKSRF.git MakeGlobalSurface.F90
             IF (fileNotExists) THEN
                lc = lcdata(j,i)
                IF (lc /= 0) THEN
@@ -872,6 +840,21 @@ PROGRAM clmu2grid
                   cv_rf  (j,i,k,:) = cv_rf  (j,i,k,:) / ur_dc(j,i,k)
                   cv_wl  (j,i,k,:) = cv_wl  (j,i,k,:) / ur_dc(j,i,k)
                ENDIF
+
+               IF (fileNotExists) THEN
+                  DO ip = 1, npft
+                     IF (pct_pft(j,i,ip) > 0) THEN
+                        lai_pft(j,i,ip,:) =  lai_pft(j,i,ip,:)/pct_pft(j,i,ip)
+                        sai_pft(j,i,ip,:) =  sai_pft(j,i,ip,:)/pct_pft(j,i,ip)
+                        htop_pft(j,i,ip)   = htop_pft(j,i,ip)  /pct_pft(j,i,ip)
+                     ENDIF
+                  ENDDO
+
+                  IF (pct_land(j,i) > 0) THEN
+                  ! PFT level
+                     pct_pft    (j,i,:) = pct_pft(j,i,:) / pct_land(j,i) * 100.
+                  ENDIF
+               ENDIF
          ENDDO
 
          IF (avg(j,i) > 0) THEN
@@ -898,11 +881,15 @@ PROGRAM clmu2grid
    DO i = 1, nyo 
       DO j = 1, nxo
          DO k =1, 3
+            ! check for htop_ur of urban grid
+            ! 如果该城市格点有植被覆盖却没有树高，则将聚合过程中生成的该格点的htop数据
+            ! 赋值为城市树高
             IF (pct_tc(j,i,k) > 0 .and. htop_ur(j,i,k) == 0) THEN
                htop_ur(j,i,k) = hgt(j,i)
             ENDIF
 
-            ! 检查城市树高
+            ! 如果经过上一步仍没有树高数据
+            ! 则将该点同纬度的所有树高求平均赋值城市树高
             IF (pct_tc(j,i,k) > 0 .and. htop_ur(j,i,k) == 0) THEN
                DO p = 1, nxo
                   IF (hgt(p,i) > 0) THEN
@@ -970,7 +957,7 @@ PROGRAM clmu2grid
    ENDDO
 
    
-   CALL check( nf90_create(TRIM(OUT_DIR)//"colm_urban_data_modis_v5_"//trim(year)//".nc", NF90_NETCDF4, ncid) )
+   CALL check( nf90_create(TRIM(OUT_DIR)//"colm_urban_data_modis_v5.6_"//trim(year)//".nc", NF90_NETCDF4, ncid) )
 
    CALL check( nf90_def_dim(ncid, "lat"     , nyo     , lat_dimid ) )
    CALL check( nf90_def_dim(ncid, "lon"     , nxo     , lon_dimid ) )
@@ -1279,7 +1266,6 @@ PROGRAM clmu2grid
    DEALLOCATE( gedi_th )
    DEALLOCATE( gl30_wt )
 
-   DEALLOCATE( lurrgid )
    DEALLOCATE( urrgid  )
 
    DEALLOCATE( latso     )
