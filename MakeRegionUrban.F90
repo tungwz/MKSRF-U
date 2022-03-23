@@ -735,7 +735,7 @@ PROGRAM main
                   IF (reg(1)==-45 .and. reg(3)==-50 .and. reg(2)==65 .and. reg(4)==70) THEN
                      !nyo = NINT((90. -nlat)/0.5+0.5)
                      !nxo = NINT((nlon+180.)/0.5+0.5)
-                     uxid = 31
+                     uxid = 30
                   ENDIF
 
                   ! 城市建筑属性聚合
