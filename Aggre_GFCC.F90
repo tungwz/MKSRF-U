@@ -94,8 +94,6 @@ Program Aggre
 
     !print*, "strat processing"
     !write(*,*) "线程数为:",omp_get_num_procs()
-!$OMP PARALLEL DO NUM_THREADS(92) &
-!$OMP PRIVATE(i,j,clat,clon,tlat,tlon)
     DO i=1,nxo
        DO j=1,nyo
           
@@ -113,7 +111,6 @@ Program Aggre
           ENDIF
        ENDDO
     ENDDO
-!$OMP END PARALLEL DO
     !print*, "end"
 
     DEALLOCATE( lat   )
