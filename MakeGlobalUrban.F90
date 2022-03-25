@@ -120,13 +120,13 @@ PROGRAM clmu2grid
    INTEGER :: uxid, uyid, upftvid, mon_dimid, den_dimid
    INTEGER :: den_vid, mon_vid, ur_landvid, saivid, ur_saivid, ur_denvid
 
-   CHARACTER(len=255) :: SRF_DIR='/hard/dongwz/CoLM-U/srfu_5x5/'
+   CHARACTER(len=255) :: SRF_DIR='/hard/dongwz/CoLM-U/urban_5x5/'
    CHARACTER(len=255) :: RAW_DIR='/tera02/yuanhua/mksrf/srf_5x5/'
-   CHARACTER(len=255) :: OUT_DIR='./'
+   CHARACTER(len=255) :: OUT_DIR='/hard/dongwz/CoLM-U/input/urban_data/'
    CHARACTER(len=255) :: REGFILE='reg_5x5'
    CHARACTER(len=255) :: filename
    CHARACTER(len=4)    , DIMENSION(4) :: creg
-   CHARACTER(len=4)   :: year="2005"
+   CHARACTER(len=4)   :: year="2000"
 
    REAL(r8) :: fac(3)
    REAL(r8) :: pi, deg2rad, re, dx, dy, sumarea, sumur, sumpct
@@ -350,7 +350,7 @@ PROGRAM clmu2grid
    PRINT *, "    reading MODIS PFTs data"
 
    ! read model grid PFT/lai/sai/htop data for urban lai calculating
-   filename = "global_0.5x0.5.MOD"//TRIM(year)//"_v5.nc"
+   filename = '/tera02/yuanhua/mksrf/srf_0.5x0.5/global_0.5x0.5.MOD'//TRIM(year)//'_v5.nc'
    inquire (file=filename, exist=fileExists)
    IF (fileExists) THEN
       ! 如果对应分辨率的全球PFTs/LAI/SAI/HTOP_PFT的文件已经生成
@@ -957,7 +957,7 @@ PROGRAM clmu2grid
    ENDDO
 
    
-   CALL check( nf90_create(TRIM(OUT_DIR)//"colm_urban_data_modis_v5.6_"//trim(year)//".nc", NF90_NETCDF4, ncid) )
+   CALL check( nf90_create(TRIM(OUT_DIR)//"colm_urban_data_modis_v5.6_new_"//trim(year)//".nc", NF90_NETCDF4, ncid) )
 
    CALL check( nf90_def_dim(ncid, "lat"     , nyo     , lat_dimid ) )
    CALL check( nf90_def_dim(ncid, "lon"     , nxo     , lon_dimid ) )
