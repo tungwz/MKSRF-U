@@ -120,7 +120,7 @@ PROGRAM clmu2grid
    INTEGER :: uxid, uyid, upftvid, mon_dimid, den_dimid
    INTEGER :: den_vid, mon_vid, ur_landvid, saivid, ur_saivid, ur_denvid
 
-   CHARACTER(len=255) :: SRF_DIR='/hard/dongwz/CoLM-U/srfu_5x5/'
+   CHARACTER(len=255) :: SRF_DIR='/hard/dongwz/CoLM-U/urban_5x5/'
    CHARACTER(len=255) :: RAW_DIR='/tera02/yuanhua/mksrf/srf_5x5/'
    CHARACTER(len=255) :: OUT_DIR='./'
    CHARACTER(len=255) :: REGFILE='reg_5x5'
